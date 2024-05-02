@@ -25,19 +25,14 @@ export async function main(denops: Denops): Promise<void> {
         return Deno.realPathSync(filePath);
       });
 
-      // 現在のファイルパスを取得（絶対パス）
       const currentFilePath = Deno.realPathSync(await getCurrentFilePath());
-
-      // ファイルパスが配列に含まれているか確認
       const isInclude = absolutePaths.includes(currentFilePath);
 
-      // 含まれていた場合、次のファイルパスを取得
       if (isInclude) {
         const nextFilePath = absolutePaths[
           (absolutePaths.indexOf(currentFilePath) + 1) % absolutePaths.length
         ];
 
-        // 取得したファイルパスを開く
         await denops.cmd(`:e ${nextFilePath}`);
       }
     },
