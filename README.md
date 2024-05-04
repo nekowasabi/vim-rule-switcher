@@ -71,6 +71,10 @@ Optionally, you can pass an argument to specify the type of switch, such as
 
 - [ ] Integrate ddu
 
+## Related Projects
+
+[vim-altr](https://github.com/kana/vim-altr)
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for
