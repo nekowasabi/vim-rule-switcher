@@ -111,6 +111,7 @@ export async function main(denops: Denops): Promise<void> {
       );
 
       if (!condition) {
+        console.log("No condition found.");
         return;
       }
 
@@ -136,6 +137,11 @@ export async function main(denops: Denops): Promise<void> {
         const nextFilePath = files.find((file) =>
           file.includes(nextFileName)
         ) as string;
+
+        if (nextFilePath === undefined) {
+          console.log("No file found.");
+          return;
+        }
 
         const gitRoot =
           (await fn.system(denops, "git rev-parse --show-toplevel")).trim();
