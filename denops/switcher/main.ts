@@ -4,8 +4,16 @@ import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
+  async function getCurrentFileRealPath(): Promise<string> {
+    return Deno.realPathSync(await getCurrentFilePath());
+  }
+
+  async function getCurrentFileName(denops: Denops): Promise<string> {
+    return ensure(await fn.expand(denops, "%:t"), is.String);
+  }
+
   /**
-   * Returns the current file path.
+   * 現在のファイルパスを返す
    *
    * @returns {Promise<string>} The current file path.
    */
@@ -15,8 +23,9 @@ export async function main(denops: Denops): Promise<void> {
 
   /**
    * ファイル名から共通部分を取得する
-   * @param fileName ファイル名
-   * @param condition 条件
+   *
+   * @param {string} fileName ファイル名
+   * @param {Condition} condition 条件
    * @returns 共通部分
    */
   function getCommonPart(fileName: string, condition: Condition): string {
@@ -30,7 +39,7 @@ export async function main(denops: Denops): Promise<void> {
   }
 
   /**
-   * Finds the condition that includes the current file path.
+   * 現在のファイルパスを含む条件を見つける
    *
    * @param {Condition[]} replacedConditions - The conditions to search in.
    * @param {string} currentFile - The current file path|file name to find.
@@ -59,6 +68,7 @@ export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
     async switchByRule(type: unknown): Promise<void> {
       ensure(type, is.String);
+
       const switchers = ensure(
         await v.g.get(denops, "switch_rule"),
         // jsonの形式を模倣して型を判定する
@@ -72,8 +82,6 @@ export async function main(denops: Denops): Promise<void> {
         }),
       );
 
-      // pathの中に~が含まれている場合は、それをホームディレクトリに置き換える
-      // switchers.conditionsの中身を書き換える
       const replacedConditions = switchers.conditions.map(
         (condition: Condition) => {
           // 無名関数にして処理をまとめる
@@ -93,32 +101,28 @@ export async function main(denops: Denops): Promise<void> {
         fileName,
       );
 
-      const currentFilePath = Deno.realPathSync(await getCurrentFilePath());
-      const currentFileName = ensure(
-        await fn.expand(denops, "%:t"),
-        is.String,
-      );
-      const file = type !== "git" ? currentFilePath : currentFileName;
+      const currentFilePath: string = await getCurrentFileRealPath();
+      const currentFileName: string = await getCurrentFileName(denops);
+      const fileForSearch = type !== "git" ? currentFilePath : currentFileName;
 
       const condition: Condition | undefined = findCondition(
         replacedConditions,
-        file,
+        fileForSearch,
       );
 
       if (!condition) {
         return;
       }
 
-      // ruleに沿ってパスを取得する
       if (condition.rule === "file") {
         const nextFilePathIndex =
           (condition.path.indexOf(currentFilePath) + 1) %
           condition.path.length;
-        const nextFilePath = condition.path[nextFilePathIndex];
-        await denops.cmd(`:e ${nextFilePath}`);
+        const filePathToOpen = condition.path[nextFilePathIndex];
+
+        await denops.cmd(`:e ${filePathToOpen}`);
       }
 
-      // rule: gitの場合は、git ls-filesで取得して、最初の候補を取得する（候補が複数ある場合は、ddu起動予定）
       if (condition.rule === "git") {
         const nextFileIndex = (condition.path.indexOf(currentFileName) + 1) %
           condition.path.length;
@@ -133,7 +137,6 @@ export async function main(denops: Denops): Promise<void> {
           file.includes(nextFileName)
         ) as string;
 
-        // パスを生成
         const gitRoot =
           (await fn.system(denops, "git rev-parse --show-toplevel")).trim();
         const filePathToOpen = `${gitRoot}/${nextFilePath}`;
