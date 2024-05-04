@@ -41,7 +41,8 @@ export async function main(denops: Denops): Promise<void> {
   const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
 
   denops.dispatcher = {
-    async switchByRule(): Promise<void> {
+    async switchByRule(type: unknown): Promise<void> {
+      ensure(type, is.String);
       const switchers = ensure(
         await v.g.get(denops, "switch_rule"),
         // jsonの形式を模倣して型を判定する
@@ -154,26 +155,27 @@ export async function main(denops: Denops): Promise<void> {
           condition.path.length;
         const nextFileName = condition.path[nextFileIndex];
 
-        const f = await fn.system(denops, "git ls-files");
-        const files = f.trim().split("\n");
+        const files = (await fn.system(denops, "git ls-files")).trim().split(
+          "\n",
+        );
 
         // filesからnextFileNameが含まれている項目を取得する
         const nextFilePath = files.find((file) =>
           file.includes(nextFileName)
         ) as string;
-        const gitRoot = await fn.system(
-          denops,
-          "git rev-parse --show-toplevel",
-        );
-        const p = gitRoot.trim() + "/" + nextFilePath;
-        console.log(p);
-        await denops.cmd(`:e ${p}`);
+
+        // パスを生成
+        const gitRoot =
+          (await fn.system(denops, "git rev-parse --show-toplevel")).trim();
+        const filePathToOpen = `${gitRoot}/${nextFilePath}`;
+
+        await denops.cmd(`:e ${filePathToOpen}`);
       }
     },
   };
 
   await denops.cmd(
-    `command! -nargs=0 SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [])`,
+    `command! -nargs=? SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [<q-args>])`,
   );
 
   await denops.cmd(
