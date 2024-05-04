@@ -37,7 +37,7 @@ let g:switch_rule = {
   \ 'conditions': [
   \   {
   \     'rule': 'file',
-  \     'path': ['%_test.ts', '%.ts'],
+  \     'path': ['/path/to/code.ts', '/path/to/tests/codeTest.ts'],
   \     'postfix': '_test.ts',
   \     'prefix': '',
   \   },
