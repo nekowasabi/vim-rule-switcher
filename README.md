@@ -67,6 +67,10 @@ Optionally, you can pass an argument to specify the type of switch, such as
 :SwitchFileByRule git
 ```
 
+## TODO
+
+- [ ] Integrate ddu
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for
