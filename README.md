@@ -6,8 +6,6 @@ types or with different naming conventions are logically related, such as header
 and implementation files in C/C++ projects, or component and test files in web
 development.
 
-このVimプラグインは、カスタムルールに基づいて関連ファイルを切り替える便利な方法を提供します。これは、C/C++プロジェクト内のヘッダーファイルと実装ファイル、またはWeb開発のコンポーネントとテストファイルなど、異なるタイプまたは異なる命名規則を持つファイルが論理的に関連付けられているプロジェクトで特に有用です。
-
 ## Features
 
 - Define custom switching rules based on file paths, prefixes, and postfixes.
