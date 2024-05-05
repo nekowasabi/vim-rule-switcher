@@ -147,14 +147,57 @@ export async function switchByGitRule(
   await denops.cmd(`:e ${filePathToOpen}`);
 }
 
-type SwitchRule = {
+export async function getSwitcherRule(
+  denops: Denops,
+  type: string,
+): Promise<Condition> {
+  const switchers = await getSwitchers(denops);
+  const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
+  const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
+  const replacedConditions = switchers.conditions.map(
+    (condition: Condition) => {
+      // 無名関数にして処理をまとめる
+      const realPath = (path: string) => {
+        if (path.includes("%")) {
+          path = path.replace("%", getCommonPart(fileName, condition));
+        }
+        return path.replace("~", homeDirectroy);
+      };
+
+      return {
+        // jsonを組み立てればいいのか
+        path: condition.path.map(realPath),
+        rule: condition.rule,
+      };
+    },
+    fileName,
+  );
+
+  const currentFilePath: string = await getCurrentFileRealPath(denops);
+  const currentFileName: string = await getCurrentFileName(denops);
+  const fileForSearch = type !== "git" ? currentFilePath : currentFileName;
+
+  const condition: Condition | undefined = findCondition(
+    replacedConditions,
+    fileForSearch,
+  );
+
+  if (!condition) {
+    console.log("No condition found.");
+    Deno.exit(1);
+  }
+
+  return condition;
+}
+
+export type SwitchRule = {
   conditions: {
     rule: string;
     path: string[];
   }[];
 };
 
-type Condition = {
+export type Condition = {
   path: string[];
   rule: string;
   postfix?: string;
