@@ -43,21 +43,21 @@ Make json file in `/path/to/example.json`.
       ]
     },
     {
-      "rule": "git",
-      "prefix": "Test",
-      "postfix": "Test",
-      "path": [
-        "%.php",
-        "%Test.php"
-      ]
-    },
-    {
       "rule": "file",
       "prefix": "Test",
       "postfix": "Test",
       "path": [
         "~/.config/nvim/rc/%.php",
         "~/.config/nvim/rc/%Test.php"
+      ]
+    },
+    {
+      "rule": "git",
+      "prefix": "Test",
+      "postfix": "Test",
+      "path": [
+        "%.php",
+        "%Test.php"
       ]
     }
   ]
