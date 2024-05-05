@@ -105,6 +105,7 @@ export async function main(denops: Denops): Promise<void> {
       const currentFileName: string = await getCurrentFileName(denops);
       const fileForSearch = type !== "git" ? currentFilePath : currentFileName;
 
+      // TODO: conditionを取得するまでを関数に切り出す
       const condition: Condition | undefined = findCondition(
         replacedConditions,
         fileForSearch,
