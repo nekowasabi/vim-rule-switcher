@@ -77,8 +77,17 @@ export function findCondition(
  * @throws {Error} スイッチルールの設定が期待する形式でない場合、エラーをスローします。
  */
 export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
+  if (!v.g.get(denops, "switch_rule")) {
+    console.log("No switch rule found.");
+    Deno.exit(1);
+  }
+
+  const settings: SwitchRule = JSON.parse(
+    ensure(await v.g.get(denops, "switch_rule"), is.Array)
+      .join("\n"),
+  );
   return ensure(
-    await v.g.get(denops, "switch_rule"),
+    settings,
     // jsonの形式を模倣して型を判定する
     is.ObjectOf({
       conditions: is.ArrayOf(
