@@ -201,13 +201,13 @@ export async function main(denops: Denops): Promise<void> {
 
   denops.dispatcher = {
     async switchByRule(type: unknown): Promise<void> {
-      const condition: Condition | undefined = await getSwitcherRule(
+      const switcher: Condition | undefined = await getSwitcherRule(
         ensure(type, is.String),
       );
 
-      condition.rule === "file"
-        ? await switchByFileRule(condition)
-        : await switchByGitRule(condition);
+      switcher.rule === "file"
+        ? await switchByFileRule(switcher)
+        : await switchByGitRule(switcher);
     },
   };
 
