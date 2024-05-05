@@ -30,25 +30,44 @@ Then run `:PlugInstall` in Vim.
 
 ## Configuration
 
+Make json file in `/path/to/example.json`.
+
+```json
+{
+  "conditions": [
+    {
+      "rule": "file",
+      "path": [
+        "~/.config/nvim/init.vim",
+        "~/.config/nvim/rc/plugin.vim"
+      ]
+    },
+    {
+      "rule": "git",
+      "prefix": "Test",
+      "postfix": "Test",
+      "path": [
+        "%.php",
+        "%Test.php"
+      ]
+    },
+    {
+      "rule": "file",
+      "prefix": "Test",
+      "postfix": "Test",
+      "path": [
+        "~/.config/nvim/rc/%.php",
+        "~/.config/nvim/rc/%Test.php"
+      ]
+    }
+  ]
+}
+```
+
 Define your switching rules in your `.vimrc` or `init.vim` like so:
 
 ```vim
-let g:switch_rule = {
-  \ 'conditions': [
-  \   {
-  \     'rule': 'file',
-  \     'path': ['/path/to/code.ts', '/path/to/tests/codeTest.ts'],
-  \     'postfix': '_test.ts',
-  \     'prefix': '',
-  \   },
-  \   {
-  \     'rule': 'git',
-  \     'path': ['%_spec.ts', '%.ts'],
-  \     'postfix': '_spec.ts',
-  \     'prefix': '',
-  \   },
-  \ ]
-  \}
+let g:switch_rule = readfile("/path/to/example.json")
 ```
 
 ## Usage
@@ -86,7 +105,7 @@ call ddu#start({'sources': [{'name': 'rule_switch'}]})
 ## TODO
 
 - [x] Integrate [ddu](https://github.com/Shougo/ddu.vim)
-- [ ] Enable use rules file.
+- [x] Enable use rules file.
 - [ ] Add config command.
 
 ## Related Projects
