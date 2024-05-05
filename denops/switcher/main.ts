@@ -8,6 +8,11 @@ export async function main(denops: Denops): Promise<void> {
     return Deno.realPathSync(await getCurrentFilePath());
   }
 
+  /**
+   * 現在のファイル名を返す
+   *
+   * @returns {Promise<string>} The current file name.
+   */
   async function getCurrentFileName(denops: Denops): Promise<string> {
     return ensure(await fn.expand(denops, "%:t"), is.String);
   }
@@ -86,6 +91,96 @@ export async function main(denops: Denops): Promise<void> {
     );
   }
 
+  async function getSwitcherRule(
+    type: string,
+  ): Promise<Condition> {
+    const switchers = await getSwitchers();
+    const replacedConditions = switchers.conditions.map(
+      (condition: Condition) => {
+        // 無名関数にして処理をまとめる
+        const realPath = (path: string) => {
+          if (path.includes("%")) {
+            path = path.replace("%", getCommonPart(fileName, condition));
+          }
+          return path.replace("~", homeDirectroy);
+        };
+
+        return {
+          // jsonを組み立てればいいのか
+          path: condition.path.map(realPath),
+          rule: condition.rule,
+        };
+      },
+      fileName,
+    );
+
+    const currentFilePath: string = await getCurrentFileRealPath();
+    const currentFileName: string = await getCurrentFileName(denops);
+    const fileForSearch = type !== "git" ? currentFilePath : currentFileName;
+
+    const condition: Condition | undefined = findCondition(
+      replacedConditions,
+      fileForSearch,
+    );
+
+    if (!condition) {
+      console.log("No condition found.");
+      Deno.exit(1);
+    }
+
+    return condition;
+  }
+
+  /**
+   * ファイル用ルールに基づいてファイル切り替えを行う
+   *
+   * @param {Condition} condition - スイッチングの条件を定義するオブジェクト。
+   * @returns {Promise<void>} スイッチングが完了したら解決されるPromise。
+   */
+  async function switchByFileRule(condition: Condition): Promise<void> {
+    const nextFilePathIndex = (condition.path.indexOf(
+      ensure(await getCurrentFileRealPath(), is.String),
+    ) + 1) %
+      condition.path.length;
+    const filePathToOpen = condition.path[nextFilePathIndex];
+
+    await denops.cmd(`:e ${filePathToOpen}`);
+  }
+
+  /**
+   * Gitルールに基づいてファイル切り替えを行う
+   *
+   * @param {Condition} condition - スイッチングの条件を定義するオブジェクト
+   * @returns {Promise<void>} スイッチングが完了したら解決されるPromise
+   */
+  async function switchByGitRule(condition: Condition): Promise<void> {
+    const nextFileIndex = (condition.path.indexOf(
+      ensure(await getCurrentFileName(denops), is.String),
+    ) + 1) %
+      condition.path.length;
+    const nextFileName = condition.path[nextFileIndex];
+
+    const files = (await fn.system(denops, "git ls-files")).trim().split(
+      "\n",
+    );
+
+    // filesからnextFileNameが含まれている最初の項目を取得する
+    const nextFilePath = files.find((file) =>
+      file.includes(nextFileName)
+    ) as string;
+
+    if (nextFilePath === undefined) {
+      console.log("No file found.");
+      Deno.exit(1);
+    }
+
+    const gitRoot = (await fn.system(denops, "git rev-parse --show-toplevel"))
+      .trim();
+    const filePathToOpen = `${gitRoot}/${nextFilePath}`;
+
+    await denops.cmd(`:e ${filePathToOpen}`);
+  }
+
   type SwitchRule = {
     conditions: {
       rule: string;
@@ -106,77 +201,13 @@ export async function main(denops: Denops): Promise<void> {
 
   denops.dispatcher = {
     async switchByRule(type: unknown): Promise<void> {
-      ensure(type, is.String);
-
-      const switchers = await getSwitchers();
-      const replacedConditions = switchers.conditions.map(
-        (condition: Condition) => {
-          // 無名関数にして処理をまとめる
-          const realPath = (path: string) => {
-            if (path.includes("%")) {
-              path = path.replace("%", getCommonPart(fileName, condition));
-            }
-            return path.replace("~", homeDirectroy);
-          };
-
-          return {
-            // jsonを組み立てればいいのか
-            path: condition.path.map(realPath),
-            rule: condition.rule,
-          };
-        },
-        fileName,
+      const condition: Condition | undefined = await getSwitcherRule(
+        ensure(type, is.String),
       );
 
-      const currentFilePath: string = await getCurrentFileRealPath();
-      const currentFileName: string = await getCurrentFileName(denops);
-      const fileForSearch = type !== "git" ? currentFilePath : currentFileName;
-
-      // TODO: conditionを取得するまでを関数に切り出す
-      const condition: Condition | undefined = findCondition(
-        replacedConditions,
-        fileForSearch,
-      );
-
-      if (!condition) {
-        console.log("No condition found.");
-        return;
-      }
-
-      if (condition.rule === "file") {
-        const nextFilePathIndex =
-          (condition.path.indexOf(currentFilePath) + 1) %
-          condition.path.length;
-        const filePathToOpen = condition.path[nextFilePathIndex];
-
-        await denops.cmd(`:e ${filePathToOpen}`);
-      }
-
-      if (condition.rule === "git") {
-        const nextFileIndex = (condition.path.indexOf(currentFileName) + 1) %
-          condition.path.length;
-        const nextFileName = condition.path[nextFileIndex];
-
-        const files = (await fn.system(denops, "git ls-files")).trim().split(
-          "\n",
-        );
-
-        // filesからnextFileNameが含まれている項目を取得する
-        const nextFilePath = files.find((file) =>
-          file.includes(nextFileName)
-        ) as string;
-
-        if (nextFilePath === undefined) {
-          console.log("No file found.");
-          return;
-        }
-
-        const gitRoot =
-          (await fn.system(denops, "git rev-parse --show-toplevel")).trim();
-        const filePathToOpen = `${gitRoot}/${nextFilePath}`;
-
-        await denops.cmd(`:e ${filePathToOpen}`);
-      }
+      condition.rule === "file"
+        ? await switchByFileRule(condition)
+        : await switchByGitRule(condition);
     },
   };
 
