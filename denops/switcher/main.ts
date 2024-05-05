@@ -54,6 +54,45 @@ export async function main(denops: Denops): Promise<void> {
     );
   }
 
+  /**
+   * `getSwitchers`関数は、設定されたスイッチルールを取得します。
+   *
+   * @returns {Promise<unknown>} スイッチルールの設定を含むPromiseを返します。
+   * スイッチルールの設定は以下の形式を持つオブジェクトです:
+   * {
+   *   conditions: [
+   *     {
+   *       rule: string,
+   *       path: string[],
+   *     },
+   *     ...
+   *   ],
+   * }
+   *
+   * @throws {Error} スイッチルールの設定が期待する形式でない場合、エラーをスローします。
+   */
+  async function getSwitchers(): Promise<SwitchRule> {
+    return ensure(
+      await v.g.get(denops, "switch_rule"),
+      // jsonの形式を模倣して型を判定する
+      is.ObjectOf({
+        conditions: is.ArrayOf(
+          is.ObjectOf({
+            rule: is.String,
+            path: is.ArrayOf(is.String),
+          }),
+        ),
+      }),
+    );
+  }
+
+  type SwitchRule = {
+    conditions: {
+      rule: string;
+      path: string[];
+    }[];
+  };
+
   type Condition = {
     path: string[];
     rule: string;
@@ -69,19 +108,7 @@ export async function main(denops: Denops): Promise<void> {
     async switchByRule(type: unknown): Promise<void> {
       ensure(type, is.String);
 
-      const switchers = ensure(
-        await v.g.get(denops, "switch_rule"),
-        // jsonの形式を模倣して型を判定する
-        is.ObjectOf({
-          conditions: is.ArrayOf(
-            is.ObjectOf({
-              rule: is.String,
-              path: is.ArrayOf(is.String),
-            }),
-          ),
-        }),
-      );
-
+      const switchers = await getSwitchers();
       const replacedConditions = switchers.conditions.map(
         (condition: Condition) => {
           // 無名関数にして処理をまとめる
