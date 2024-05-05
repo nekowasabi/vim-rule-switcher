@@ -69,7 +69,7 @@ Optionally, you can pass an argument to specify the type of switch, such as
 
 ## TODO
 
-- [ ] Integrate ddu
+- [ ] Integrate [ddu](https://github.com/Shougo/ddu.vim)
 
 ## Related Projects
 
