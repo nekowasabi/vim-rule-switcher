@@ -23,7 +23,7 @@ You can install vim-rule-switcher using your favorite plugin manager. For
 example, with [vim-plug](https://github.com/junegunn/vim-plug):
 
 ```vim
-Plug 'your-github-username/vim-rule-switcher'
+Plug 'nekowasabi/vim-rule-switcher'
 ```
 
 Then run `:PlugInstall` in Vim.
