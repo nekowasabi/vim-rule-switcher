@@ -9,7 +9,7 @@ import { ActionData } from "https://deno.land/x/ddu_kind_file@v0.7.1/file.ts";
 type Params = Record<never, never>;
 
 export class Source extends BaseSource<Params> {
-  override kind = "aider";
+  override kind = "rule_switch";
 
   override gather(args: {
     denops: Denops;

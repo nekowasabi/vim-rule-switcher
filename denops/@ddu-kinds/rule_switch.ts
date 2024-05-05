@@ -19,7 +19,7 @@ type Params = Record<never, never>;
 
 const isDduItemAction = is.ObjectOf({ path: is.String });
 
-export const BookmarkAction: Actions<Params> = {
+export const SwitchRuleAction: Actions<Params> = {
   open: async (args: {
     denops: Denops;
     context: Context;
@@ -29,29 +29,10 @@ export const BookmarkAction: Actions<Params> = {
     const action = args.items[0]["action"] as { path: string };
     return ActionFlags.None;
   },
-  add: async (args: {
-    denops: Denops;
-    context: Context;
-    actionParams: unknown;
-    items: DduItem[];
-  }) => {
-    // 分割代入
-    const { denops, items } = args;
-    // unknownutilのmaybe関数便利
-    const action = maybe(items.at(0)?.action, isDduItemAction);
-
-    if (!action) {
-      return ActionFlags.None;
-    }
-
-    await denops.cmd(`AiderAddFile ${action.path}`);
-
-    return ActionFlags.None;
-  },
 };
 
 export class Kind extends BaseKind<Params> {
-  override actions = BookmarkAction;
+  override actions = SwitchRuleAction;
   override getPreviewer(args: {
     denops: Denops;
     item: DduItem;
