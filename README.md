@@ -86,6 +86,12 @@ Optionally, you can pass an argument to specify the type of switch, such as
 :SwitchFileByRule git
 ```
 
+To edit the rules file, use the following command:
+
+```vim
+:OpenSwitchRuleFile
+```
+
 ### Integrated with ddu
 
 Using ddu, you can select and open files defined in rules via a fuzzy finder.
@@ -106,7 +112,7 @@ call ddu#start({'sources': [{'name': 'rule_switch'}]})
 
 - [x] Integrate [ddu](https://github.com/Shougo/ddu.vim)
 - [x] Enable use rules file.
-- [ ] Add config command.
+- [x] Add config command.
 
 ## Related Projects
 
