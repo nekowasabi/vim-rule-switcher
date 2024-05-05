@@ -27,6 +27,26 @@ export const SwitchRuleAction: Actions<Params> = {
     items: DduItem[];
   }) => {
     const action = args.items[0]["action"] as { path: string };
+    await args.denops.cmd("edit + " + action.path);
+    return ActionFlags.None;
+  },
+  add: async (args: {
+    denops: Denops;
+    context: Context;
+    actionParams: unknown;
+    items: DduItem[];
+  }) => {
+    // 分割代入
+    const { denops, items } = args;
+    // unknownutilのmaybe関数便利
+    const action = maybe(items.at(0)?.action, isDduItemAction);
+
+    if (!action) {
+      return ActionFlags.None;
+    }
+
+    await denops.cmd(`AiderAddFile ${action.path}`);
+
     return ActionFlags.None;
   },
 };
