@@ -82,10 +82,14 @@ export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
     Deno.exit(1);
   }
 
-  const settings: SwitchRule = JSON.parse(
-    ensure(await v.g.get(denops, "switch_rule"), is.Array)
-      .join("\n"),
-  );
+  const path = ensure(await v.g.get(denops, "switch_rule"), is.String);
+
+  const fileContent = await fn.readfile(denops, path);
+  ensure(fileContent, is.Array);
+
+  const file = fileContent.join("\n");
+  const settings: SwitchRule = JSON.parse(file);
+
   return ensure(
     settings,
     // jsonの形式を模倣して型を判定する

@@ -19,9 +19,16 @@ export async function main(denops: Denops): Promise<void> {
         ? await switchByFileRule(denops, switcher)
         : await switchByGitRule(denops, switcher);
     },
+
+    async openSwitchRuleFile(): Promise<void> {
+    },
   };
 
   await denops.cmd(
     `command! -nargs=? SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [<q-args>])`,
+  );
+
+  await denops.cmd(
+    `command! -nargs=? OpenSwitchRuleFile call denops#notify("${denops.name}", "openSwitchRuleFile", [<q-args>])`,
   );
 }
