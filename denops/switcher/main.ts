@@ -6,6 +6,7 @@ import {
   switchByFileRule,
   switchByGitRule,
 } from "./common.ts";
+import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
@@ -21,6 +22,13 @@ export async function main(denops: Denops): Promise<void> {
     },
 
     async openSwitchRuleFile(): Promise<void> {
+      if (!v.g.get(denops, "switch_rule")) {
+        console.log("No switch rule found.");
+        Deno.exit(1);
+      }
+
+      const path = ensure(await v.g.get(denops, "switch_rule"), is.String);
+      await denops.cmd(`edit ${path}`);
     },
   };
 
