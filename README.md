@@ -77,5 +77,4 @@ Optionally, you can pass an argument to specify the type of switch, such as
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for
-details.
+This project is licensed under the MIT License - see the LICENSE file for details.
