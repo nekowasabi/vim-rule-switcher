@@ -24,7 +24,7 @@ export async function main(denops: Denops): Promise<void> {
     async openSwitchRuleFile(): Promise<void> {
       if (!v.g.get(denops, "switch_rule")) {
         console.log("No switch rule found.");
-        Deno.exit(1);
+        return;
       }
 
       const path = ensure(await v.g.get(denops, "switch_rule"), is.String);

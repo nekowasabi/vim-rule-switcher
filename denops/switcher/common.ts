@@ -54,7 +54,7 @@ export function findCondition(
   currentFile: string,
 ): Condition | undefined {
   return replacedConditions.find((c: Condition) =>
-    c.path.includes(currentFile)
+    c.path.some((path) => path.includes(currentFile))
   );
 }
 
@@ -150,7 +150,7 @@ export async function switchByGitRule(
 
   if (nextFilePath === undefined) {
     console.log("No file found.");
-    Deno.exit(1);
+    return;
   }
 
   const gitRoot = (await fn.system(denops, "git rev-parse --show-toplevel"))
@@ -197,7 +197,7 @@ export async function getSwitcherRule(
 
   if (!condition) {
     console.log("No condition found.");
-    Deno.exit(1);
+    throw ("No condition found.");
   }
 
   return condition;
