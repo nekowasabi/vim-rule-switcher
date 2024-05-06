@@ -12,8 +12,19 @@ import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
 type Params = Record<never, never>;
 
-function getFiles(switcher: Condition): string[] {
+async function getFiles(
+  denops: Denops,
+  switcher: Condition,
+): Promise<string[]> {
+  const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
+  const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
   return switcher.path.map((path: string) => {
+    if (path.includes("%")) {
+      path = path
+        .replace("%", fileName)
+        .replace("~", homeDirectroy);
+    }
+    console.log(path);
     return path;
   });
 }
@@ -26,12 +37,14 @@ async function getGitFiles(
   const gitRoot = (await fn.system(denops, "git rev-parse --show-toplevel"))
     .trim();
 
-  return switcher.path
-    .flatMap((file: string) =>
-      result
-        .filter((r: string) => r.includes(file))
-        .map((r: string) => `${gitRoot}/${r}`)
-    );
+  return Array.from(
+    new Set(switcher.path
+      .flatMap((file: string) =>
+        result
+          .filter((r: string) => r.includes(file))
+          .map((r: string) => `${gitRoot}/${r}`)
+      )),
+  );
 }
 
 export class Source extends BaseSource<Params> {
@@ -66,7 +79,7 @@ export class Source extends BaseSource<Params> {
           );
 
           const files = type === "file"
-            ? getFiles(switcher)
+            ? await getFiles(args.denops, switcher)
             : await getGitFiles(args.denops, switcher, filteredResult);
           const items: Item<ActionData>[] = files.map((file: string) => ({
             word: file,
