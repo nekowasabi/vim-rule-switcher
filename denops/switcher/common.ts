@@ -3,6 +3,12 @@ import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
+/**
+ * 現在開いているファイルの実際のパスを非同期で取得します。
+ *
+ * @param {Denops} denops - Denops インスタンス。
+ * @returns {Promise<string>} 現在開いているファイルの実際のパスを返す Promise。
+ */
 export async function getCurrentFileRealPath(denops: Denops): Promise<string> {
   return Deno.realPathSync(await getCurrentFilePath(denops));
 }
