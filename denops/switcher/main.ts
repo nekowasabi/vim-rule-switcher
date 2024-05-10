@@ -11,14 +11,17 @@ import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
     async switchByRule(type: unknown): Promise<void> {
-      const switcher: Condition | undefined = await getSwitcherRule(
-        denops,
-        ensure(type, is.String),
-      );
+      try {
+        const switcher: Condition | undefined = await getSwitcherRule(
+          denops,
+          ensure(type, is.String),
+        );
 
-      switcher.rule === "file"
-        ? await switchByFileRule(denops, switcher)
-        : await switchByGitRule(denops, switcher);
+        switcher.rule === "file"
+          ? await switchByFileRule(denops, switcher)
+          : await switchByGitRule(denops, switcher);
+      } catch (_e) {
+      }
     },
 
     async openSwitchRuleFile(): Promise<void> {

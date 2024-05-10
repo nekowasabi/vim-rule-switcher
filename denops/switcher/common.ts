@@ -202,8 +202,10 @@ export async function getSwitcherRule(
   );
 
   if (!condition) {
+    const ac = new AbortController();
     console.log("No condition found.");
-    throw ("No condition found.");
+    ac.abort();
+    throw ("");
   }
 
   return condition;
