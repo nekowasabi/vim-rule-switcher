@@ -191,7 +191,9 @@ export async function getSwitcherRule(
     },
     fileName,
   ).filter((condition: Condition) => {
-    return condition.rule === type;
+    return type === "git"
+      ? condition.rule === "git"
+      : condition.rule === "file";
   });
 
   const currentFilePath: string = await getCurrentFileRealPath(denops);
