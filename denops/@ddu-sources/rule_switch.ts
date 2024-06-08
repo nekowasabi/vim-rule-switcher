@@ -24,7 +24,6 @@ async function getFiles(
         .replace("%", fileName)
         .replace("~", homeDirectroy);
     }
-    console.log(path);
     return path;
   });
 }
