@@ -10,18 +10,19 @@ import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
-    async switchByRule(type: unknown): Promise<void> {
+    async switchByRule(type: unknown): Promise<boolean> {
       try {
         const switcher: Condition | undefined = await getSwitcherRule(
           denops,
           ensure(type, is.String),
         );
 
-        switcher.rule === "file"
+        return switcher.rule === "file"
           ? await switchByFileRule(denops, switcher)
           : await switchByGitRule(denops, switcher);
       } catch (_e) {
       }
+      return false;
     },
 
     async openSwitchRuleFile(): Promise<void> {

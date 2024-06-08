@@ -119,14 +119,19 @@ export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
 export async function switchByFileRule(
   denops: Denops,
   condition: Condition,
-): Promise<void> {
+): Promise<boolean> {
   const nextFilePathIndex = (condition.path.indexOf(
     ensure(await getCurrentFileRealPath(denops), is.String),
   ) + 1) %
     condition.path.length;
   const filePathToOpen = condition.path[nextFilePathIndex];
 
+  if (filePathToOpen === undefined) {
+    return false;
+  }
+
   await denops.cmd(`:e ${filePathToOpen}`);
+  return true;
 }
 
 /**
@@ -138,7 +143,7 @@ export async function switchByFileRule(
 export async function switchByGitRule(
   denops: Denops,
   condition: Condition,
-): Promise<void> {
+): Promise<boolean> {
   const nextFileIndex = (condition.path.indexOf(
     ensure(await getCurrentFileName(denops), is.String),
   ) + 1) %
@@ -156,7 +161,7 @@ export async function switchByGitRule(
 
   if (nextFilePath === undefined) {
     console.log("No file found.");
-    return;
+    return false;
   }
 
   const gitRoot = (await fn.system(denops, "git rev-parse --show-toplevel"))
@@ -164,6 +169,8 @@ export async function switchByGitRule(
   const filePathToOpen = `${gitRoot}/${nextFilePath}`;
 
   await denops.cmd(`:e ${filePathToOpen}`);
+
+  return true;
 }
 
 export async function getSwitcherRule(
