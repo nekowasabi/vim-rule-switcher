@@ -160,7 +160,7 @@ export async function switchByGitRule(
   ) as string;
 
   if (nextFilePath === undefined) {
-    console.log("No file found.");
+    // console.log("No file found.");
     return false;
   }
 
@@ -214,7 +214,7 @@ export async function getSwitcherRule(
 
   if (!condition) {
     const ac = new AbortController();
-    console.log("No condition found.");
+    // console.log("No condition found.");
     ac.abort();
     throw ("");
   }

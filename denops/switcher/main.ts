@@ -17,9 +17,10 @@ export async function main(denops: Denops): Promise<void> {
           ensure(type, is.String),
         );
 
-        return switcher.rule === "file"
+        switcher.rule === "file"
           ? await switchByFileRule(denops, switcher)
           : await switchByGitRule(denops, switcher);
+        return true;
       } catch (_e) {
       }
       return false;
