@@ -190,7 +190,9 @@ export async function getSwitcherRule(
       };
     },
     fileName,
-  );
+  ).filter((condition: Condition) => {
+    return condition.rule === type;
+  });
 
   const currentFilePath: string = await getCurrentFileRealPath(denops);
   const currentFileName: string = await getCurrentFileName(denops);
