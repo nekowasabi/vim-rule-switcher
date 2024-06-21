@@ -42,7 +42,6 @@ export async function main(denops: Denops): Promise<void> {
   );
 
   await denops.cmd(
-    `command! -nargs=? OpenSwitchRuleFile call denops#notify("${denops.name}",
-"openSwitchRuleFile", [<q-args>])`,
+    `command! -nargs=0 OpenSwitchRuleFile call denops#notify("${denops.name}", "openSwitchRuleFile", [])`,
   );
 }
