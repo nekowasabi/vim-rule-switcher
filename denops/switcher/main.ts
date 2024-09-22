@@ -1,6 +1,7 @@
 import { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import {
+  addRule,
   Condition,
   getSwitcherRule,
   switchByFileRule,
@@ -11,16 +12,8 @@ import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
     async saveSwitchRule(name: unknown): Promise<void> {
-      if (!v.g.get(denops, "switch_rule")) {
-        console.log("No switch rule found.");
-        return;
-      }
-
-      const json_path = ensure(
-        await v.g.get(denops, "switch_rule"),
-        is.String,
-      );
-      const rule_string = await Deno.readTextFile(json_path);
+      const ruleName = ensure(name, is.String);
+      await addRule(denops, ruleName);
     },
 
     async switchByRule(type: unknown): Promise<boolean> {
@@ -39,7 +32,7 @@ export async function main(denops: Denops): Promise<void> {
       return false;
     },
 
-    async openSwitchRuleFile(): Promise<void> {
+    async openSwitchRule(): Promise<void> {
       if (!v.g.get(denops, "switch_rule")) {
         console.log("No switch rule found.");
         return;
@@ -55,7 +48,7 @@ export async function main(denops: Denops): Promise<void> {
   );
 
   await denops.cmd(
-    `command! -nargs=0 OpenSwitchRuleFile call denops#notify("${denops.name}", "openSwitchRuleFile", [])`,
+    `command! -nargs=0 OpenSwitchRule call denops#notify("${denops.name}", "openSwitchRule", [])`,
   );
 
   await denops.cmd(

@@ -235,3 +235,45 @@ export type Condition = {
   postfix?: string;
   prefix?: string;
 };
+
+/**
+ * Add a new rule to the existing switch rules
+ *
+ * @param {Denops} denops - Denops instance
+ * @param {string} ruleName - Name of the new rule
+ * @returns {Promise<void>}
+ */
+export async function addRule(
+  denops: Denops,
+  ruleName: string,
+): Promise<void> {
+  const switchRulePath = ensure(
+    await v.g.get(denops, "switch_rule"),
+    is.String,
+  );
+  const switchRules: SwitchRule = JSON.parse(
+    await Deno.readTextFile(switchRulePath),
+  );
+
+  const existingCondition = switchRules.conditions.find((condition) =>
+    condition.rule === ruleName
+  );
+
+  const filePath = await getCurrentFileRealPath(denops);
+
+  if (existingCondition) {
+    if (!existingCondition.path.includes(filePath)) {
+      existingCondition.path.push(filePath);
+    }
+  } else {
+    switchRules.conditions.push({
+      rule: ruleName,
+      path: [filePath],
+    });
+  }
+
+  await Deno.writeTextFile(
+    switchRulePath,
+    JSON.stringify(switchRules, null, 2),
+  );
+}
