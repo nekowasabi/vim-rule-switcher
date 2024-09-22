@@ -36,6 +36,7 @@ Make json file in `/path/to/example.json`.
 {
   "conditions": [
     {
+      "name": "neovim_settings",
       "rule": "file",
       "path": [
         "~/.config/nvim/init.vim",
@@ -43,6 +44,7 @@ Make json file in `/path/to/example.json`.
       ]
     },
     {
+      "name": "unit_test",
       "rule": "file",
       "prefix": "Test",
       "postfix": "Test",
@@ -52,6 +54,7 @@ Make json file in `/path/to/example.json`.
       ]
     },
     {
+      "name": "git_sample",
       "rule": "git",
       "prefix": "Test",
       "postfix": "Test",
