@@ -86,6 +86,15 @@ Optionally, you can pass an argument to specify the type of switch, such as
 :SwitchFileByRule git
 ```
 
+To add a new rule for the current file, use the following command:
+
+```vim
+:SaveSwitchRule <rule_name>
+```
+
+This command will add the current file to the specified rule in the switch rule
+file.
+
 To edit the rules file, use the following command:
 
 ```vim
