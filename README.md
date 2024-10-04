@@ -52,16 +52,6 @@ Make json file in `/path/to/example.json`.
         "~/.config/nvim/rc/%.php",
         "~/.config/nvim/rc/%Test.php"
       ]
-    },
-    {
-      "name": "git_sample",
-      "rule": "git",
-      "prefix": "Test",
-      "postfix": "Test",
-      "path": [
-        "%.php",
-        "%Test.php"
-      ]
     }
   ]
 }
