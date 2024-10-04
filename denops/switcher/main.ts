@@ -15,6 +15,12 @@ export async function main(denops: Denops): Promise<void> {
         denops,
         ensure("file", is.String),
       );
+
+      if (!switcher) {
+        console.log("No switch rule found.");
+        return;
+      }
+
       const path = ensure(switcher.path, is.ArrayOf(is.String));
       const pathWithIndex = path.map((p, i) => `${i}: ${p}`);
       const index = ensure(
