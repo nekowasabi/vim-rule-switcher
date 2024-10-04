@@ -152,7 +152,6 @@ export async function getSwitcherRule(
       };
 
       return {
-        // jsonを組み立てればいいのか
         path: condition.path.map(realPath),
         rule: condition.rule,
       };

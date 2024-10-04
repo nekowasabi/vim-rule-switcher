@@ -10,6 +10,23 @@ import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
+    async selectSwitchRule(): Promise<void> {
+      const switcher: Condition | undefined = await getSwitcherRule(
+        denops,
+        ensure("file", is.String),
+      );
+      const path = ensure(switcher.path, is.ArrayOf(is.String));
+      const pathWithIndex = path.map((p, i) => `${i}: ${p}`);
+      const index = ensure(
+        await denops.call("inputlist", pathWithIndex),
+        is.Number,
+      );
+
+      if (index === -1) {
+        return;
+      }
+      await denops.cmd(`edit ${path[index]}`);
+    },
     async saveSwitchRule(name: unknown): Promise<void> {
       await addRule(denops, ensure(name, is.String));
     },
@@ -48,5 +65,9 @@ export async function main(denops: Denops): Promise<void> {
 
   await denops.cmd(
     `command! -nargs=1 SaveSwitchRule call denops#notify("${denops.name}", "saveSwitchRule", [<f-args>])`,
+  );
+
+  await denops.cmd(
+    `command! -nargs=0 SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [<f-args>])`,
   );
 }

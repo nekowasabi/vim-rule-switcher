@@ -72,13 +72,6 @@ command:
 :SwitchFileByRule
 ```
 
-Optionally, you can pass an argument to specify the type of switch, such as
-'git' to switch between files tracked by Git:
-
-```vim
-:SwitchFileByRule git
-```
-
 To add a new rule for the current file, use the following command:
 
 ```vim
@@ -93,6 +86,15 @@ To edit the rules file, use the following command:
 ```vim
 :OpenSwitchRuleFile
 ```
+
+To select a switch rule interactively, use the following command:
+
+```vim
+:SelectSwitchRule
+```
+
+This command allows you to choose from the available switch rules and apply the
+selected rule to switch files.
 
 ## TODO
 
