@@ -96,12 +96,6 @@ To select a switch rule interactively, use the following command:
 This command allows you to choose from the available switch rules and apply the
 selected rule to switch files.
 
-## TODO
-
-- [x] Integrate [ddu](https://github.com/Shougo/ddu.vim)
-- [x] Enable use rules file.
-- [x] Add config command.
-
 ## Related Projects
 
 [vim-altr](https://github.com/kana/vim-altr)
