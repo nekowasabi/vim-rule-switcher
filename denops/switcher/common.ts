@@ -134,45 +134,6 @@ export async function switchByFileRule(
   return true;
 }
 
-/**
- * Gitルールに基づいてファイル切り替えを行う
- *
- * @param {Condition} condition - スイッチングの条件を定義するオブジェクト
- * @returns {Promise<void>} スイッチングが完了したら解決されるPromise
- */
-export async function switchByGitRule(
-  denops: Denops,
-  condition: Condition,
-): Promise<boolean> {
-  const nextFileIndex = (condition.path.indexOf(
-    ensure(await getCurrentFileName(denops), is.String),
-  ) + 1) %
-    condition.path.length;
-  const nextFileName = condition.path[nextFileIndex];
-
-  const files = (await fn.system(denops, "git ls-files")).trim().split(
-    "\n",
-  );
-
-  // filesからnextFileNameが含まれている最初の項目を取得する
-  const nextFilePath = files.find((file) =>
-    file.includes(nextFileName)
-  ) as string;
-
-  if (nextFilePath === undefined) {
-    // console.log("No file found.");
-    return false;
-  }
-
-  const gitRoot = (await fn.system(denops, "git rev-parse --show-toplevel"))
-    .trim();
-  const filePathToOpen = `${gitRoot}/${nextFilePath}`;
-
-  await denops.cmd(`:e ${filePathToOpen}`);
-
-  return true;
-}
-
 export async function getSwitcherRule(
   denops: Denops,
   type: string,
@@ -224,12 +185,14 @@ export async function getSwitcherRule(
 
 export type SwitchRule = {
   conditions: {
+    name?: string;
     rule: string;
     path: string[];
   }[];
 };
 
 export type Condition = {
+  name?: string;
   path: string[];
   rule: string;
   postfix?: string;
@@ -256,7 +219,7 @@ export async function addRule(
   );
 
   const existingCondition = switchRules.conditions.find((condition) =>
-    condition.rule === ruleName
+    condition.name === ruleName
   );
 
   const filePath = await getCurrentFileRealPath(denops);
@@ -267,7 +230,8 @@ export async function addRule(
     }
   } else {
     switchRules.conditions.push({
-      rule: ruleName,
+      name: ruleName,
+      rule: "file",
       path: [filePath],
     });
   }

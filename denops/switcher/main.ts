@@ -5,15 +5,13 @@ import {
   Condition,
   getSwitcherRule,
   switchByFileRule,
-  switchByGitRule,
 } from "./common.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
     async saveSwitchRule(name: unknown): Promise<void> {
-      const ruleName = ensure(name, is.String);
-      await addRule(denops, ruleName);
+      await addRule(denops, ensure(name, is.String));
     },
 
     async switchByRule(type: unknown): Promise<boolean> {
@@ -22,10 +20,7 @@ export async function main(denops: Denops): Promise<void> {
           denops,
           ensure(type, is.String),
         );
-
-        switcher.rule === "file"
-          ? await switchByFileRule(denops, switcher)
-          : await switchByGitRule(denops, switcher);
+        await switchByFileRule(denops, switcher);
         return true;
       } catch (_e) {
       }
