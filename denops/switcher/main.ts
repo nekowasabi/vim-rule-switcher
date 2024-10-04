@@ -23,8 +23,8 @@ export async function main(denops: Denops): Promise<void> {
         await switchByFileRule(denops, switcher);
         return true;
       } catch (_e) {
+        return false;
       }
-      return false;
     },
 
     async openSwitchRule(): Promise<void> {
