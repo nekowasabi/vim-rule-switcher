@@ -104,22 +104,6 @@ To edit the rules file, use the following command:
 :OpenSwitchRuleFile
 ```
 
-### Integrated with ddu
-
-Using ddu, you can select and open files defined in rules via a fuzzy finder.
-
-```vim
-call ddu#custom#patch_global(#{
-    \   kindOptions: #{
-    \     rule_switch: #{
-    \       defaultAction: 'open',
-    \     },
-    \   }
-    \ })
-
-call ddu#start({'sources': [{'name': 'rule_switch'}]})
-```
-
 ## TODO
 
 - [x] Integrate [ddu](https://github.com/Shougo/ddu.vim)
