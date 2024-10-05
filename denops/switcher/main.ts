@@ -43,6 +43,12 @@ export async function main(denops: Denops): Promise<void> {
           denops,
           ensure(type, is.String),
         );
+
+        if (!switcher) {
+          console.log("No switch rule found.");
+          return false;
+        }
+
         await switchByFileRule(denops, switcher);
         return true;
       } catch (_e) {

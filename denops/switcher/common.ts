@@ -59,9 +59,10 @@ export function findCondition(
   replacedConditions: Condition[],
   currentFile: string,
 ): Condition | undefined {
-  return replacedConditions.find((c: Condition) =>
+  const foundCondition = replacedConditions.find((c: Condition) =>
     c.path.some((path) => path.includes(currentFile))
   );
+  return foundCondition;
 }
 
 /**
@@ -137,7 +138,7 @@ export async function switchByFileRule(
 export async function getSwitcherRule(
   denops: Denops,
   type: string,
-): Promise<Condition> {
+): Promise<Condition | undefined> {
   const switchers = await getSwitchers(denops);
   const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
   const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
@@ -163,23 +164,13 @@ export async function getSwitcherRule(
       : condition.rule === "file";
   });
 
-  const currentFilePath: string = await getCurrentFileRealPath(denops);
   const currentFileName: string = await getCurrentFileName(denops);
-  const fileForSearch = type !== "git" ? currentFilePath : currentFileName;
-
   const condition: Condition | undefined = findCondition(
     replacedConditions,
-    fileForSearch,
+    currentFileName,
   );
 
-  if (!condition) {
-    const ac = new AbortController();
-    // console.log("No condition found.");
-    ac.abort();
-    throw ("");
-  }
-
-  return condition;
+  return condition ?? undefined;
 }
 
 export type SwitchRule = {
