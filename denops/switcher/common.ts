@@ -1,4 +1,4 @@
-import { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
@@ -60,7 +60,7 @@ export function findCondition(
   currentFile: string,
 ): Condition | undefined {
   const foundCondition = replacedConditions.find((c: Condition) =>
-    c.path.some((path) => path.includes(currentFile))
+    c.path.some((path) => path.includes(currentFile)),
   );
   return foundCondition;
 }
@@ -121,9 +121,11 @@ export async function switchByFileRule(
   denops: Denops,
   condition: Condition,
 ): Promise<boolean> {
-  const nextFilePathIndex = (condition.path.indexOf(
-    ensure(await getCurrentFileRealPath(denops), is.String),
-  ) + 1) %
+  const nextFilePathIndex =
+    (condition.path.indexOf(
+      ensure(await getCurrentFileRealPath(denops), is.String),
+    ) +
+      1) %
     condition.path.length;
   const filePathToOpen = condition.path[nextFilePathIndex];
 
@@ -142,8 +144,8 @@ export async function getSwitcherRule(
   const switchers = await getSwitchers(denops);
   const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
   const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
-  const replacedConditions = switchers.conditions.map(
-    (condition: Condition) => {
+  const replacedConditions = switchers.conditions
+    .map((condition: Condition) => {
       // 無名関数にして処理をまとめる
       const realPath = (path: string) => {
         if (path.includes("%")) {
@@ -156,13 +158,12 @@ export async function getSwitcherRule(
         path: condition.path.map(realPath),
         rule: condition.rule,
       };
-    },
-    fileName,
-  ).filter((condition: Condition) => {
-    return type === "git"
-      ? condition.rule === "git"
-      : condition.rule === "file";
-  });
+    }, fileName)
+    .filter((condition: Condition) => {
+      return type === "git"
+        ? condition.rule === "git"
+        : condition.rule === "file";
+    });
 
   const currentFileName: string = await getCurrentFileName(denops);
   const condition: Condition | undefined = findCondition(
@@ -196,10 +197,7 @@ export type Condition = {
  * @param {string} ruleName - Name of the new rule
  * @returns {Promise<void>}
  */
-export async function addRule(
-  denops: Denops,
-  ruleName: string,
-): Promise<void> {
+export async function addRule(denops: Denops, ruleName: string): Promise<void> {
   const switchRulePath = ensure(
     await v.g.get(denops, "switch_rule"),
     is.String,
@@ -209,12 +207,15 @@ export async function addRule(
   );
 
   const filePath = await getCurrentFileRealPath(denops);
-  const existingCondition = switchRules.conditions.find((condition) =>
-    condition.name === ruleName
+  const existingCondition = switchRules.conditions.find(
+    (condition) => condition.name === ruleName,
   );
 
-  const condition = existingCondition ??
-    { name: ruleName, rule: "file", path: [] };
+  const condition = existingCondition ?? {
+    name: ruleName,
+    rule: "file",
+    path: [],
+  };
   if (!condition.path.includes(filePath)) {
     // add the file path to the condition
     condition.path.push(filePath);

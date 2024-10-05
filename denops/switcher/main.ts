@@ -1,11 +1,8 @@
-import { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
-import {
-  addRule,
-  Condition,
-  getSwitcherRule,
-  switchByFileRule,
-} from "./common.ts";
+import type { Condition } from "./common.ts";
+import { addRule, getSwitcherRule, switchByFileRule } from "./common.ts";
+
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
