@@ -208,22 +208,18 @@ export async function addRule(
     await Deno.readTextFile(switchRulePath),
   );
 
+  const filePath = await getCurrentFileRealPath(denops);
   const existingCondition = switchRules.conditions.find((condition) =>
     condition.name === ruleName
   );
 
-  const filePath = await getCurrentFileRealPath(denops);
-
-  if (existingCondition) {
-    if (!existingCondition.path.includes(filePath)) {
-      existingCondition.path.push(filePath);
-    }
-  } else {
-    switchRules.conditions.push({
-      name: ruleName,
-      rule: "file",
-      path: [filePath],
-    });
+  const condition = existingCondition ??
+    { name: ruleName, rule: "file", path: [] };
+  if (!condition.path.includes(filePath)) {
+    condition.path.push(filePath);
+  }
+  if (!existingCondition) {
+    switchRules.conditions.push(condition);
   }
 
   await Deno.writeTextFile(
