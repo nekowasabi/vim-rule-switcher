@@ -216,9 +216,11 @@ export async function addRule(
   const condition = existingCondition ??
     { name: ruleName, rule: "file", path: [] };
   if (!condition.path.includes(filePath)) {
+    // add the file path to the condition
     condition.path.push(filePath);
   }
   if (!existingCondition) {
+    // add new rule to the switch rules
     switchRules.conditions.push(condition);
   }
 
@@ -226,4 +228,5 @@ export async function addRule(
     switchRulePath,
     JSON.stringify(switchRules, null, 2),
   );
+  console.log(`Rule ${ruleName} added successfully.`);
 }
