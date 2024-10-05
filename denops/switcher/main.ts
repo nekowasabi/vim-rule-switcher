@@ -22,7 +22,7 @@ export async function main(denops: Denops): Promise<void> {
       }
 
       const path = ensure(switcher.path, is.ArrayOf(is.String));
-      const pathWithIndex = path.map((p, i) => `${i}: ${p}`);
+      const pathWithIndex = path.map((p, i) => `[${i}]: ${p}`);
       const index = ensure(
         await denops.call("inputlist", pathWithIndex),
         is.Number,
