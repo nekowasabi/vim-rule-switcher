@@ -147,10 +147,11 @@ export async function getSwitcherRule(
     .map((condition: Condition) => {
       // 無名関数にして処理をまとめる
       const realPath = (path: string) => {
-        if (path.includes("%")) {
-          path = path.replace("%", getCommonPart(fileName, condition));
+        let updatedPath = path;
+        if (updatedPath.includes("%")) {
+          updatedPath = updatedPath.replace("%", getCommonPart(fileName, condition));
         }
-        return path.replace("~", homeDirectroy);
+        return updatedPath.replace("~", homeDirectroy);
       };
 
       return {
