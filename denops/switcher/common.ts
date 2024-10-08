@@ -61,7 +61,12 @@ export function findCondition(
   currentFile: string,
   ruleName: string,
 ): Condition | undefined {
-  const foundCondition = replacedConditions.find((c: Condition) =>
+  const foundCondition = replacedConditions.find((c: Condition) => {
+    if (c.rule === ruleName) {
+      return c.path.some((path) => path.includes(currentFile));
+    }
+    return false;
+  }) || replacedConditions.find((c: Condition) =>
     c.path.some((path) => path.includes(currentFile))
   );
   return foundCondition;
