@@ -1,7 +1,7 @@
-import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
+import type {Denops} from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
+import {ensure, is} from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
 /**
  * 現在開いているファイルの実際のパスを非同期で取得します。
@@ -221,8 +221,8 @@ export async function addRule(denops: Denops, ruleName: string): Promise<void> {
     condition.path.push(filePath);
   }
   if (!existingCondition) {
-    // add new rule to the switch rules
-    switchRules.conditions.push(condition);
+    // add new rule to the beginning of the switch rules
+    switchRules.conditions.unshift(condition);
   }
 
   await Deno.writeTextFile(
