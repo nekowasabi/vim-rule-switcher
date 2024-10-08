@@ -39,13 +39,14 @@ export async function getCurrentFilePath(denops: Denops): Promise<string> {
  * @returns 共通部分
  */
 export function getCommonPart(fileName: string, condition: Condition): string {
-  if (condition.postfix && fileName.endsWith(condition.postfix)) {
-    fileName = fileName.replace(condition.postfix, "");
+  let updatedFileName = fileName;
+  if (condition.postfix && updatedFileName.endsWith(condition.postfix)) {
+    updatedFileName = updatedFileName.replace(condition.postfix, "");
   }
-  if (condition.prefix && fileName.startsWith(condition.prefix)) {
-    fileName = fileName.replace(condition.prefix, "");
+  if (condition.prefix && updatedFileName.startsWith(condition.prefix)) {
+    updatedFileName = updatedFileName.replace(condition.prefix, "");
   }
-  return fileName;
+  return updatedFileName;
 }
 
 /**
