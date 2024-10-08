@@ -1,7 +1,7 @@
-import type {Denops} from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
-import {ensure, is} from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
 /**
  * 現在開いているファイルの実際のパスを非同期で取得します。
@@ -60,7 +60,7 @@ export function findCondition(
   currentFile: string,
 ): Condition | undefined {
   const foundCondition = replacedConditions.find((c: Condition) =>
-    c.path.some((path) => path.includes(currentFile)),
+    c.path.some((path) => path.includes(currentFile))
   );
   return foundCondition;
 }
@@ -121,11 +121,10 @@ export async function switchByFileRule(
   denops: Denops,
   condition: Condition,
 ): Promise<boolean> {
-  const nextFilePathIndex =
-    (condition.path.indexOf(
-      ensure(await getCurrentFileRealPath(denops), is.String),
-    ) +
-      1) %
+  const nextFilePathIndex = (condition.path.indexOf(
+    ensure(await getCurrentFileRealPath(denops), is.String),
+  ) +
+    1) %
     condition.path.length;
   const filePathToOpen = condition.path[nextFilePathIndex];
 
