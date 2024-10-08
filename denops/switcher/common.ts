@@ -59,6 +59,7 @@ export function getCommonPart(fileName: string, condition: Condition): string {
 export function findCondition(
   replacedConditions: Condition[],
   currentFile: string,
+  ruleName: string,
 ): Condition | undefined {
   const foundCondition = replacedConditions.find((c: Condition) =>
     c.path.some((path) => path.includes(currentFile))
@@ -139,7 +140,7 @@ export async function switchByFileRule(
 
 export async function getSwitcherRule(
   denops: Denops,
-  type: string,
+  ruleName: string,
 ): Promise<Condition | undefined> {
   const switchers = await getSwitchers(denops);
   const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
@@ -159,17 +160,13 @@ export async function getSwitcherRule(
         path: condition.path.map(realPath),
         rule: condition.rule,
       };
-    }, fileName)
-    .filter((condition: Condition) => {
-      return type === "git"
-        ? condition.rule === "git"
-        : condition.rule === "file";
-    });
+    }, fileName);
 
   const currentFileName: string = await getCurrentFileName(denops);
   const condition: Condition | undefined = findCondition(
     replacedConditions,
     currentFileName,
+    ruleName,
   );
 
   return condition ?? undefined;
