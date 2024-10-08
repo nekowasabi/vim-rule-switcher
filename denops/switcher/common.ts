@@ -62,7 +62,7 @@ export function findCondition(
   ruleName: string,
 ): Condition | undefined {
   const foundCondition = replacedConditions.find((c: Condition) => {
-    if (c.rule === ruleName) {
+    if (c.name === ruleName) {
       return c.path.some((path) => path.includes(currentFile));
     }
     return false;
@@ -162,6 +162,7 @@ export async function getSwitcherRule(
       };
 
       return {
+        name: condition.name,
         path: condition.path.map(realPath),
         rule: condition.rule,
       };

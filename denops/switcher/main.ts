@@ -2,7 +2,6 @@ import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import type { Condition } from "./common.ts";
 import { addRule, getSwitcherRule, switchByFileRule } from "./common.ts";
-
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
@@ -34,11 +33,11 @@ export async function main(denops: Denops): Promise<void> {
       await addRule(denops, ensure(name, is.String));
     },
 
-    async switchByRule(type: unknown): Promise<boolean> {
+    async switchByRule(ruleName: unknown): Promise<boolean> {
       try {
         const switcher: Condition | undefined = await getSwitcherRule(
           denops,
-          ensure(type, is.String),
+          ensure(ruleName, is.String),
         );
 
         if (!switcher) {
