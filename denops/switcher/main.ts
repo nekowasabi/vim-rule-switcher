@@ -18,7 +18,6 @@ export async function main(denops: Denops): Promise<void> {
       }
 
       const path = ensure(switcher.path, is.ArrayOf(is.String));
-      // const pathWithIndex = path.map((p, i) => `[${i}]: ${p}`);
       const pathWithIndex = path.map((p, i) => {
         // フルパスからファイル名だけ取得
         const fileName = p.split("/").pop();
