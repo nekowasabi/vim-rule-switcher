@@ -6,6 +6,11 @@ import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
+    /**
+     * スイッチルールを選択します
+     *
+     * @returns {Promise<void>} 処理が完了したときに解決されるPromise
+     */
     async selectSwitchRule(): Promise<void> {
       const switcher: Condition | undefined = await getSwitcherRule(
         denops,
@@ -33,10 +38,22 @@ export async function main(denops: Denops): Promise<void> {
       }
       await denops.cmd(`edit ${path[index]}`);
     },
+    /**
+     * スイッチルールを保存します
+     *
+     * @param {unknown} name - 保存するルールの名前
+     * @returns {Promise<void>} 処理が完了したときに解決されるPromise
+     */
     async saveSwitchRule(name: unknown): Promise<void> {
       await addRule(denops, ensure(name, is.String));
     },
 
+    /**
+     * 指定されたルール名に基づいてスイッチを実行します
+     *
+     * @param {unknown} ruleName - スイッチに使用するルール名
+     * @returns {Promise<boolean>} スイッチが成功した場合はtrue、失敗した場合はfalseを返すPromise
+     */
     async switchByRule(ruleName: unknown): Promise<boolean> {
       try {
         const switcher: Condition | undefined = await getSwitcherRule(
@@ -56,6 +73,11 @@ export async function main(denops: Denops): Promise<void> {
       }
     },
 
+    /**
+     * 現在のスイッチルールを開きます。
+     *
+     * @returns {Promise<void>} 処理が完了したときに解決されるPromise。
+     */
     async openSwitchRule(): Promise<void> {
       if (!v.g.get(denops, "switch_rule")) {
         console.log("No switch rule found.");
