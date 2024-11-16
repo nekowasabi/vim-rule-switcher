@@ -220,7 +220,7 @@ export async function addRule(denops: Denops, ruleName: string): Promise<void> {
 export async function openFloatingWindow(denops: Denops, bufnr: number, pathWithIndex: string[]): Promise<void> {
   const terminal_width = Math.floor(ensure(await n.nvim_get_option(denops, "columns"), is.Number));
   const terminal_height = Math.floor(ensure(await n.nvim_get_option(denops, "lines"), is.Number));
-  const floatWinHeight = maybe(await v.g.get(denops, "aider_floatwin_height"), is.Number) || 20;
+  const floatWinHeight = pathWithIndex.length;
   const floatWinWidth = maybe(await v.g.get(denops, "aider_floatwin_width"), is.Number) || 100;
 
   const row = Math.floor((terminal_height - floatWinHeight) / 2);
