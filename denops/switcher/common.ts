@@ -1,7 +1,8 @@
 import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
+import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
+import { ensure, is, maybe } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
 /**
  * 現在開いているファイルの実際のパスを非同期で取得します。
@@ -215,3 +216,47 @@ export async function addRule(denops: Denops, ruleName: string): Promise<void> {
   await Deno.writeTextFile(switchRulePath, JSON.stringify(switchRules, null, 2));
   console.log(`Rule ${ruleName} added successfully.`);
 }
+
+export async function openFloatingWindow(denops: Denops, bufnr: number, pathWithIndex: string[]): Promise<void> {
+  const terminal_width = Math.floor(ensure(await n.nvim_get_option(denops, "columns"), is.Number));
+  const terminal_height = Math.floor(ensure(await n.nvim_get_option(denops, "lines"), is.Number));
+  const floatWinHeight = maybe(await v.g.get(denops, "aider_floatwin_height"), is.Number) || 20;
+  const floatWinWidth = maybe(await v.g.get(denops, "aider_floatwin_width"), is.Number) || 100;
+
+  const row = Math.floor((terminal_height - floatWinHeight) / 2);
+  const col = Math.floor((terminal_width - floatWinWidth) / 2);
+
+  await n.nvim_open_win(denops, bufnr, true, {
+    relative: "editor",
+    border: "double",
+    width: floatWinWidth,
+    height: floatWinHeight,
+    row: row,
+    col: col,
+  });
+
+  await n.nvim_buf_set_lines(denops, bufnr, 0, 0, true, pathWithIndex);
+  const lineCount = ensure(await n.nvim_buf_line_count(denops, bufnr), is.Number);
+  await n.nvim_buf_set_lines(denops, bufnr, lineCount - 1, lineCount, true, []);
+  await denops.cmd("set nonumber");
+  await n.nvim_buf_set_option(denops, bufnr, "modifiable", false);
+  await n.nvim_buf_set_option(denops, bufnr, "buftype", "nofile");
+
+  // 1-9のキーマッピングを設定
+  for (let i = 0; i <= 9; i++) {
+    await n.nvim_buf_set_keymap(
+      denops,
+      bufnr,
+      "n",
+      i.toString(),
+      `<cmd>call denops#notify('switcher', 'openSelectedFile', [${i}])<CR>`,
+      { silent: true }
+    );
+  }
+
+  await n.nvim_buf_set_keymap(denops, bufnr, "n", "q", "<cmd>fclose!<CR>", {
+    silent: true,
+  });
+}
+
+
