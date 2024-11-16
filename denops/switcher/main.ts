@@ -1,7 +1,13 @@
 import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import type { Condition } from "./common.ts";
-import { addRule, getSwitcherRule, switchByFileRule } from "./common.ts";
+import {
+  addRule,
+  getSwitcherRule,
+  openFloatingWindow,
+  switchByFileRule,
+} from "./common.ts";
+import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
@@ -26,33 +32,54 @@ export async function main(denops: Denops): Promise<void> {
       const pathWithIndex = path.map((p, i) => {
         // フルパスからファイル名だけ取得
         const fileName = p.split("/").pop();
-        return `[${i}]:  ${fileName}\npath: ${p}\n`;
+        return `[${i}]: ${fileName} path: ${p}`;
       });
-      const index = ensure(
-        await denops.call("inputlist", pathWithIndex),
+
+      const bufnr = ensure(
+        await n.nvim_create_buf(denops, false, true),
         is.Number,
       );
+      await openFloatingWindow(denops, bufnr, pathWithIndex);
+    },
 
-      if (index === -1) {
+    /**
+     * Opens a floating window for the specified buffer.
+     * The floating window
+        is positioned at the center of the terminal.
+     *
+     * @param {number} index - The buffer number.
+     **/
+    async openSelectedFile(index: unknown): Promise<void> {
+      console.log(index);
+      const bufnr = ensure(await n.nvim_get_current_buf(denops), is.Number);
+      const lines = ensure(
+        await n.nvim_buf_get_lines(denops, bufnr, 0, -1, false),
+        is.ArrayOf(is.String),
+      );
+      for (const line of lines) {
+        const splitted = line.split(" ");
+        const filePath = splitted[splitted.length - 1];
+        await denops.cmd("fclose!");
+        await denops.cmd(`e ${filePath}`);
         return;
       }
-      await denops.cmd(`edit ${path[index]}`);
     },
+
     /**
-     * スイッチルールを保存します
+     * Save the switch rule
      *
-     * @param {unknown} name - 保存するルールの名前
-     * @returns {Promise<void>} 処理が完了したときに解決されるPromise
+     * @param {unknown} name - Name of the rule to save
+     * @returns {Promise<void>} Promise that resolves when the process is complete
      */
     async saveSwitchRule(name: unknown): Promise<void> {
       await addRule(denops, ensure(name, is.String));
     },
 
     /**
-     * 指定されたルール名に基づいてスイッチを実行します
+     * Execute switch based on the specified rule name
      *
-     * @param {unknown} ruleName - スイッチに使用するルール名
-     * @returns {Promise<boolean>} スイッチが成功した場合はtrue、失敗した場合はfalseを返すPromise
+     * @param {unknown} ruleName - Rule name to use for switching
+     * @returns {Promise<boolean>} Promise that returns true if switch succeeds, false if it fails
      */
     async switchByRule(ruleName: unknown): Promise<boolean> {
       try {
@@ -74,9 +101,9 @@ export async function main(denops: Denops): Promise<void> {
     },
 
     /**
-     * 現在のスイッチルールを開きます。
+     * Open the current switch rule
      *
-     * @returns {Promise<void>} 処理が完了したときに解決されるPromise。
+     * @returns {Promise<void>} Promise that resolves when the process is complete
      */
     async openSwitchRule(): Promise<void> {
       if (!v.g.get(denops, "switch_rule")) {
@@ -102,6 +129,6 @@ export async function main(denops: Denops): Promise<void> {
   );
 
   await denops.cmd(
-    `command! -nargs=0 SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [<f-args>])`,
+    `command! -nargs=0 SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [])`,
   );
 }
