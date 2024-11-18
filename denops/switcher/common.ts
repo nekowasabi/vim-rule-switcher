@@ -236,11 +236,12 @@ export async function openFloatingWindow(denops: Denops, bufnr: number, pathWith
   });
 
   await n.nvim_buf_set_lines(denops, bufnr, 0, 0, true, pathWithIndex);
-  const lineCount = ensure(await n.nvim_buf_line_count(denops, bufnr), is.Number);
-  await n.nvim_buf_set_lines(denops, bufnr, lineCount - 1, lineCount, true, []);
+  await denops.cmd("normal! gg");
   await denops.cmd("set nonumber");
   await n.nvim_buf_set_option(denops, bufnr, "modifiable", false);
+  await n.nvim_buf_set_option(denops, bufnr, "wrap", false);
   await n.nvim_buf_set_option(denops, bufnr, "buftype", "nofile");
+  await n.nvim_buf_set_option(denops, bufnr, "filetype", "markdown");
 
   // 1-9のキーマッピングを設定
   for (let i = 0; i <= 9; i++) {
@@ -257,6 +258,7 @@ export async function openFloatingWindow(denops: Denops, bufnr: number, pathWith
   await n.nvim_buf_set_keymap(denops, bufnr, "n", "q", "<cmd>fclose!<CR>", {
     silent: true,
   });
+
 }
 
 

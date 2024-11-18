@@ -32,7 +32,7 @@ export async function main(denops: Denops): Promise<void> {
       const pathWithIndex = path.map((p, i) => {
         // フルパスからファイル名だけ取得
         const fileName = p.split("/").pop();
-        return `[${i}]: ${fileName} path: ${p}`;
+        return `[${i}]: \`${fileName}\` path: ${p}`;
       });
 
       const bufnr = ensure(
@@ -50,13 +50,15 @@ export async function main(denops: Denops): Promise<void> {
      * @param {number} index - The buffer number.
      **/
     async openSelectedFile(index: unknown): Promise<void> {
-      console.log(index);
       const bufnr = ensure(await n.nvim_get_current_buf(denops), is.Number);
       const lines = ensure(
         await n.nvim_buf_get_lines(denops, bufnr, 0, -1, false),
         is.ArrayOf(is.String),
       );
       for (const line of lines) {
+        if (!line.includes(`[${index}]`)) {
+          continue;
+        }
         const splitted = line.split(" ");
         const filePath = splitted[splitted.length - 1];
         await denops.cmd("fclose!");
