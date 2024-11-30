@@ -87,6 +87,11 @@ If no name argument is provided, it switches between files based on all defined 
 If a name argument is provided, it will open the first file from the file paths
 associated with that specific rule name.
 
+Available keybindings in the selection window:
+- 0-9: Select file by number
+- q: Quit the selection window  
+- o: Open the file under cursor
+
 To add a new rule for the current file, use the following command:
 
 ```vim

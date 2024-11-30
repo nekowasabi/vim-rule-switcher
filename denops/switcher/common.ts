@@ -263,6 +263,16 @@ export async function openFloatingWindow(denops: Denops, bufnr: number, pathWith
     );
   }
 
+  // oでカーソル行のファイルを開く
+  await n.nvim_buf_set_keymap(
+    denops,
+    bufnr,
+    "n",
+    "o",
+    "<cmd>call denops#notify('switcher', 'openSelectedFile', [line('.') - 1])<CR>",
+    { silent: true }
+  );
+
   await n.nvim_buf_set_keymap(denops, bufnr, "n", "q", "<cmd>fclose!<CR>", {
     silent: true,
   });
