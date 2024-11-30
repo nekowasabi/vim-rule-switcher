@@ -17,10 +17,11 @@ export async function main(denops: Denops): Promise<void> {
      *
      * @returns {Promise<void>} 処理が完了したときに解決されるPromise
      */
-    async selectSwitchRule(ruleName: unknown): Promise<void> {
+    async selectSwitchRule(name: unknown): Promise<void> {
       const switcher: Condition | undefined = await getSwitcherRule(
         denops,
         ensure("file", is.String),
+        ensure(name, is.String),
       );
 
       if (!switcher) {
@@ -87,6 +88,7 @@ export async function main(denops: Denops): Promise<void> {
       try {
         const switcher: Condition | undefined = await getSwitcherRule(
           denops,
+          ensure("file", is.String),
           ensure(rule, is.String),
         );
 

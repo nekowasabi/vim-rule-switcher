@@ -55,16 +55,19 @@ export function getCommonPart(fileName: string, condition: Condition): string {
  *
  * @param {Condition[]} replacedConditions - The conditions to search in.
  * @param {string} currentFile - The current file path|file name to find.
+ * @param {string} rule - The rule name to filter conditions.
+ * @param {string} [name] - Optional name to further filter conditions.
  * @returns {Condition | undefined} - The found condition or undefined if not found.
  */
 export function findCondition(
   replacedConditions: Condition[],
   currentFile: string,
-  ruleName: string,
+  rule: string,
+  name?: string,
 ): Condition | undefined {
   const foundCondition =
     replacedConditions.find((c: Condition) => {
-      if (c.name === ruleName) {
+      if (c.rule === rule && c.name === name) {
         return c.path.some((path) => path.includes(currentFile));
       }
       return false;
@@ -130,8 +133,9 @@ export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
  * @returns {Promise<void>} スイッチングが完了したら解決されるPromise。
  */
 export async function switchByFileRule(denops: Denops, condition: Condition): Promise<boolean> {
-  const nextFilePathIndex =
-    (condition.path.indexOf(ensure(await getCurrentFileRealPath(denops), is.String)) + 1) % condition.path.length;
+  const currentPath = ensure(await getCurrentFileRealPath(denops), is.String);
+  const currentIndex = condition.path.findIndex(path => currentPath.includes(path) || path.includes(currentPath));
+  const nextFilePathIndex = (currentIndex + 1) % condition.path.length;
   const filePathToOpen = condition.path[nextFilePathIndex];
 
   if (filePathToOpen === undefined) {
@@ -142,7 +146,11 @@ export async function switchByFileRule(denops: Denops, condition: Condition): Pr
   return true;
 }
 
-export async function getSwitcherRule(denops: Denops, rule: string): Promise<Condition | undefined> {
+export async function getSwitcherRule(
+  denops: Denops,
+  rule: string,
+  name?: string
+): Promise<Condition | undefined> {
   const switchers = await getSwitchers(denops);
   const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
   const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
@@ -164,7 +172,7 @@ export async function getSwitcherRule(denops: Denops, rule: string): Promise<Con
   }, fileName);
 
   const currentFileName: string = await getCurrentFileName(denops);
-  const condition: Condition | undefined = findCondition(replacedConditions, currentFileName, rule);
+  const condition: Condition | undefined = findCondition(replacedConditions, currentFileName, rule, name);
 
   return condition ?? undefined;
 }
