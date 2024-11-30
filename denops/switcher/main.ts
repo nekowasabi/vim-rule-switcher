@@ -1,4 +1,6 @@
 import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
+import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
+import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import type { Condition } from "./common.ts";
 import {
@@ -7,8 +9,6 @@ import {
   openFloatingWindow,
   switchByFileRule,
 } from "./common.ts";
-import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
-import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
@@ -17,7 +17,7 @@ export async function main(denops: Denops): Promise<void> {
      *
      * @returns {Promise<void>} 処理が完了したときに解決されるPromise
      */
-    async selectSwitchRule(): Promise<void> {
+    async selectSwitchRule(ruleName: unknown): Promise<void> {
       const switcher: Condition | undefined = await getSwitcherRule(
         denops,
         ensure("file", is.String),
@@ -80,14 +80,14 @@ export async function main(denops: Denops): Promise<void> {
     /**
      * Execute switch based on the specified rule name
      *
-     * @param {unknown} ruleName - Rule name to use for switching
+     * @param {unknown} rule - Rule name to use for switching
      * @returns {Promise<boolean>} Promise that returns true if switch succeeds, false if it fails
      */
-    async switchByRule(ruleName: unknown): Promise<boolean> {
+    async switchByRule(rule: unknown): Promise<boolean> {
       try {
         const switcher: Condition | undefined = await getSwitcherRule(
           denops,
-          ensure(ruleName, is.String),
+          ensure(rule, is.String),
         );
 
         if (!switcher) {
@@ -131,6 +131,6 @@ export async function main(denops: Denops): Promise<void> {
   );
 
   await denops.cmd(
-    `command! -nargs=0 SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [])`,
+    `command! -nargs=? SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [<f-args>])`,
   );
 }

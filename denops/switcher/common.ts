@@ -1,5 +1,5 @@
-import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
 import { ensure, is, maybe } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
@@ -142,7 +142,7 @@ export async function switchByFileRule(denops: Denops, condition: Condition): Pr
   return true;
 }
 
-export async function getSwitcherRule(denops: Denops, ruleName: string): Promise<Condition | undefined> {
+export async function getSwitcherRule(denops: Denops, rule: string): Promise<Condition | undefined> {
   const switchers = await getSwitchers(denops);
   const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
   const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
@@ -164,7 +164,7 @@ export async function getSwitcherRule(denops: Denops, ruleName: string): Promise
   }, fileName);
 
   const currentFileName: string = await getCurrentFileName(denops);
-  const condition: Condition | undefined = findCondition(replacedConditions, currentFileName, ruleName);
+  const condition: Condition | undefined = findCondition(replacedConditions, currentFileName, rule);
 
   return condition ?? undefined;
 }
