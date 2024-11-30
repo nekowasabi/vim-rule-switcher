@@ -133,6 +133,6 @@ export async function main(denops: Denops): Promise<void> {
   );
 
   await denops.cmd(
-    `command! -nargs=? SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [<f-args>])`,
+    `command! -nargs=? -complete=customlist,GetRulesName SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [<f-args>])`,
   );
 }
