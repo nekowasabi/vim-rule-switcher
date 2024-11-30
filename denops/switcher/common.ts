@@ -273,6 +273,7 @@ export async function openFloatingWindow(denops: Denops, bufnr: number, pathWith
     { silent: true }
   );
 
+  // 閉じる
   await n.nvim_buf_set_keymap(denops, bufnr, "n", "q", "<cmd>fclose!<CR>", {
     silent: true,
   });
