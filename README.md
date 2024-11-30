@@ -69,8 +69,23 @@ To switch between files according to the defined rules, use the following Vim
 command:
 
 ```vim
-:SwitchFileByRule
+:SwitchFileByRule [name]
 ```
+If no name argument is provided, it switches between files based on all defined rules.
+If a name argument is provided, it will open the first file from the file paths
+associated with that specific rule name.
+
+To add a new rule for the current file, use the following command:
+
+```vim
+:SelectSwitchRule
+```
+This command allows you to choose from the available switch rules and apply the
+selected rule to switch files.
+
+If no name argument is provided, it switches between files based on all defined rules.
+If a name argument is provided, it will open the first file from the file paths
+associated with that specific rule name.
 
 To add a new rule for the current file, use the following command:
 
@@ -89,12 +104,6 @@ To edit the rules file, use the following command:
 
 To select a switch rule interactively, use the following command:
 
-```vim
-:SelectSwitchRule
-```
-
-This command allows you to choose from the available switch rules and apply the
-selected rule to switch files.
 
 ## Related Projects
 
