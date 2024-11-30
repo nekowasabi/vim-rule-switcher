@@ -68,7 +68,7 @@ export function findCondition(
   const foundCondition =
     replacedConditions.find((c: Condition) => {
       if (c.rule === rule && c.name === name) {
-        return c.path.some((path) => path.includes(currentFile));
+        return c.path;
       }
       return false;
     }) || replacedConditions.find((c: Condition) => c.path.some((path) => path.includes(currentFile)));
@@ -249,7 +249,6 @@ export async function openFloatingWindow(denops: Denops, bufnr: number, pathWith
   await n.nvim_buf_set_option(denops, bufnr, "modifiable", false);
   await n.nvim_buf_set_option(denops, bufnr, "wrap", false);
   await n.nvim_buf_set_option(denops, bufnr, "buftype", "nofile");
-  await n.nvim_buf_set_option(denops, bufnr, "filetype", "markdown");
 
   // 1-9のキーマッピングを設定
   for (let i = 0; i <= 9; i++) {
