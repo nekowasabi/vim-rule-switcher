@@ -12,7 +12,6 @@ import {
 
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
-    // AI! コメントを日本語に翻訳して
     /**
      * Displays available switch rules in a floating window for selection
      *
