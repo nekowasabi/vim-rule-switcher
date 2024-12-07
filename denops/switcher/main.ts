@@ -13,9 +13,10 @@ import {
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
     /**
-     * スイッチルールを選択します
+     * Displays available switch rules in a floating window for selection
      *
-     * @returns {Promise<void>} 処理が完了したときに解決されるPromise
+     * @param {unknown} name - Optional name to filter rules
+     * @returns {Promise<void>} Promise that resolves when selection is complete
      */
     async selectSwitchRule(name?: unknown): Promise<void> {
       const switcher: Condition | undefined = await getSwitcherRule(
@@ -86,7 +87,7 @@ export async function main(denops: Denops): Promise<void> {
      */
     async switchByRule(rule: unknown): Promise<boolean> {
       try {
-        // AI! 処理をコメント文として説明を追加
+        // Get the switch rule for the current file using the specified rule name
         const switcher: Condition | undefined = await getSwitcherRule(
           denops,
           ensure("file", is.String),
