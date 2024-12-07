@@ -29,6 +29,7 @@ export async function main(denops: Denops): Promise<void> {
         return;
       }
 
+      // AI! 処理内容をコメントとしてついかして
       const path = ensure(switcher.path, is.ArrayOf(is.String));
       const pathWithIndex = path.map((p, i) => {
         // フルパスからファイル名だけ取得
