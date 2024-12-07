@@ -13,10 +13,9 @@ import {
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
     /**
-     * Displays available switch rules in a floating window for selection
+     * スイッチルールを選択します
      *
-     * @param {unknown} name - Optional name to filter rules
-     * @returns {Promise<void>} Promise that resolves when selection is complete
+     * @returns {Promise<void>} 処理が完了したときに解決されるPromise
      */
     async selectSwitchRule(name?: unknown): Promise<void> {
       const switcher: Condition | undefined = await getSwitcherRule(
@@ -30,10 +29,9 @@ export async function main(denops: Denops): Promise<void> {
         return;
       }
 
-      // Get the paths from the switch rule and format them for display
       const path = ensure(switcher.path, is.ArrayOf(is.String));
       const pathWithIndex = path.map((p, i) => {
-        // Extract the filename from the full path
+        // フルパスからファイル名だけ取得
         const fileName = p.split("/").pop();
         return `[${i}]: \`${fileName}\` path: ${p}`;
       });
@@ -88,6 +86,7 @@ export async function main(denops: Denops): Promise<void> {
      */
     async switchByRule(rule: unknown): Promise<boolean> {
       try {
+        // AI! 処理をコメント文として説明を追加
         const switcher: Condition | undefined = await getSwitcherRule(
           denops,
           ensure("file", is.String),
