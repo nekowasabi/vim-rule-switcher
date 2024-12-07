@@ -19,6 +19,7 @@ export async function main(denops: Denops): Promise<void> {
      * @returns {Promise<void>} Promise that resolves when selection is complete
      */
     async selectSwitchRule(name?: unknown): Promise<void> {
+      // AI! add comment by process.
       const switcher: Condition | undefined = await getSwitcherRule(
         denops,
         ensure("file", is.String),
