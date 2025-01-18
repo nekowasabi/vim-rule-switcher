@@ -147,27 +147,40 @@ export async function getSwitchers(denops: Denops): Promise<NewSwitchRule> {
 export async function switchByFileRule(denops: Denops, project: Project): Promise<boolean> {
   const getNextFilePath = (currentPath: string, paths: string[]): string | undefined => {
     const currentIndex = paths.findIndex(path => currentPath.includes(path) || path.includes(currentPath));
-    const nextFilePathIndex = (currentIndex + 1) % paths.length;
-    return paths[nextFilePathIndex];
+    const nextIndex = currentIndex === paths.length - 1 ? 0 : currentIndex + 1;
+    return paths[nextIndex];
   };
 
-  const currentPath = ensure(await getCurrentFileRealPath(denops), is.String);
-  const filePathToOpen = getNextFilePath(currentPath, project.path);
-
-  if (filePathToOpen === undefined) {
-    return false;
-  }
 
   if (project.rule === "file") {
+    const currentPath = ensure(await getCurrentFileRealPath(denops), is.String);
+    const filePathToOpen = getNextFilePath(currentPath, project.path);
+
+    if (filePathToOpen === undefined) {
+      return false;
+    }
+
     await denops.cmd(`:e ${filePathToOpen}`);
     return true;
   }
 
   if (project.rule === "git") {
+    const currentFileName = ensure(await getCurrentFileName(denops), is.String);
+    const filePathToOpen = getNextFilePath(currentFileName, project.path);
+
+    if (filePathToOpen === undefined) {
+      return false;
+    }
+
     const result = ensure(await denops.call("system", "git ls-files"), is.String);
     const files = result.split("\n");
     const targetFile = files.find((file) => file.includes(filePathToOpen));
     const realPath = Deno.realPathSync(ensure(targetFile, is.String));
+
+    if (!realPath) {
+      console.log("No switch rule found.");
+      return false;
+    }
 
     await denops.cmd(`:e ${realPath}`);
     return true;
@@ -239,32 +252,36 @@ export type NewSwitchRule = {
  * Add a new rule to the existing switch rules
  *
  * @param {Denops} denops - Denops instance
- * @param {string} ruleName - Name of the new rule
+ * @param {string} projectName - Name of the new rule
  * @returns {Promise<void>}
  */
-export async function addRule(denops: Denops, ruleName: string): Promise<void> {
+export async function addRule(denops: Denops, projectName: string): Promise<void> {
   const switchRulePath = ensure(await v.g.get(denops, "switch_rule"), is.String);
-  const switchRules: SwitchRule = JSON.parse(await Deno.readTextFile(switchRulePath));
+  const switchRules: NewSwitchRule = JSON.parse(await Deno.readTextFile(switchRulePath));
 
   const filePath = await getCurrentFileRealPath(denops);
-  const existingCondition = switchRules.conditions.find((condition) => condition.name === ruleName);
+  const existingCondition = switchRules.projects.find((project) => project.name === projectName);
 
   const condition = existingCondition ?? {
-    name: ruleName,
-    rule: "file",
-    path: [],
+    name: projectName,
+    rules: [{
+      rule: "file",
+      path: [],
+    }],
   };
-  if (!condition.path.includes(filePath)) {
+
+  if (!condition.rules[0].path.includes(filePath)) {
     // add the file path to the condition
-    condition.path.push(filePath);
+    condition.rules[0].path.push(filePath);
   }
+
   if (!existingCondition) {
-    // add new rule to the beginning of the switch rules
-    switchRules.conditions.unshift(condition);
+    // add new project to the beginning of the projects array 
+    switchRules.projects.unshift(condition);
   }
 
   await Deno.writeTextFile(switchRulePath, JSON.stringify(switchRules, null, 2));
-  console.log(`Rule ${ruleName} added successfully.`);
+  console.log(`Rule ${projectName} added successfully.`);
 }
 
 export async function openFloatingWindow(denops: Denops, bufnr: number, pathWithIndex: string[]): Promise<void> {
