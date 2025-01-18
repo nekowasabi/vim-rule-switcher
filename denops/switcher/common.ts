@@ -36,16 +36,16 @@ export async function getCurrentFilePath(denops: Denops): Promise<string> {
  * ファイル名から共通部分を取得する
  *
  * @param {string} fileName ファイル名
- * @param {Condition} condition 条件
+ * @param {Project} project 条件
  * @returns 共通部分
  */
-export function getCommonPart(fileName: string, condition: Condition): string {
+export function getCommonPart(fileName: string, project: Project): string {
   let updatedFileName = fileName;
-  if (condition.postfix && updatedFileName.endsWith(condition.postfix)) {
-    updatedFileName = updatedFileName.replace(condition.postfix, "");
+  if (project.postfix && updatedFileName.endsWith(project.postfix)) {
+    updatedFileName = updatedFileName.replace(project.postfix, "");
   }
-  if (condition.prefix && updatedFileName.startsWith(condition.prefix)) {
-    updatedFileName = updatedFileName.replace(condition.prefix, "");
+  if (project.prefix && updatedFileName.startsWith(project.prefix)) {
+    updatedFileName = updatedFileName.replace(project.prefix, "");
   }
   return updatedFileName;
 }
@@ -53,26 +53,34 @@ export function getCommonPart(fileName: string, condition: Condition): string {
 /**
  * 現在のファイルパスを含む条件を見つける
  *
- * @param {Condition[]} replacedConditions - The conditions to search in.
+ * @param {Project[]} replacedProjects - The conditions to search in.
  * @param {string} currentFile - The current file path|file name to find.
  * @param {string} rule - The rule name to filter conditions.
  * @param {string} [name] - Optional name to further filter conditions.
- * @returns {Condition | undefined} - The found condition or undefined if not found.
+ * @returns {Project | undefined} - The found condition or undefined if not found.
  */
-export function findCondition(
-  replacedConditions: Condition[],
+export function findProject(
+  replacedProjects: Project[],
   currentFile: string,
   rule: string,
   name?: string,
-): Condition | undefined {
-  const foundCondition =
-    replacedConditions.find((c: Condition) => {
+): Project | undefined {
+  let foundProject: Project | undefined;
+  if (rule === "file") {
+    foundProject =
+    replacedProjects.find((c: Project) => {
       if (c.rule === rule && c.name === name) {
         return c.path;
       }
       return false;
-    }) || replacedConditions.find((c: Condition) => c.path.some((path) => path.includes(currentFile)));
-  return foundCondition;
+    }) || replacedProjects.find((c: Project) => c.path.some((path) => path.includes(currentFile)));
+
+  }
+  if (rule === "git") {
+    foundProject = replacedProjects.find((c: Project) => c.rule === rule);
+
+  }
+  return foundProject;
 }
 
 /**
@@ -93,7 +101,7 @@ export function findCondition(
  *
  * @throws {Error} スイッチルールの設定が期待する形式でない場合、エラーをスローします。
  */
-export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
+export async function getSwitchers(denops: Denops): Promise<NewSwitchRule> {
   if (!v.g.get(denops, "switch_rule")) {
     console.log("No switch rule found.");
     Deno.exit(1);
@@ -110,17 +118,21 @@ export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
   }
 
   const file = fileContent.join("\n");
-  const settings: SwitchRule = JSON.parse(file);
+  const settings: NewSwitchRule = JSON.parse(file);
 
   return ensure(
     settings,
-    // jsonの形式を模倣して型を判定する
     is.ObjectOf({
-      conditions: is.ArrayOf(
+      projects: is.ArrayOf(
         is.ObjectOf({
-          rule: is.String,
-          path: is.ArrayOf(is.String),
-        }),
+          name: is.String,
+          rules: is.ArrayOf(
+            is.ObjectOf({
+              rule: is.String,
+              path: is.ArrayOf(is.String),
+            })
+          ),
+        })
       ),
     }),
   );
@@ -129,50 +141,70 @@ export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
 /**
  * ファイル用ルールに基づいてファイル切り替えを行う
  *
- * @param {Condition} condition - スイッチングの条件を定義するオブジェクト。
- * @returns {Promise<void>} スイッチングが完了したら解決されるPromise。
+ * @param {Project} project - スイッチングの条件を定義するオブジェクト。
+ * @returns {Promise<boolean>} スイッチングが完了したら解決されるPromise。
  */
-export async function switchByFileRule(denops: Denops, condition: Condition): Promise<boolean> {
+export async function switchByFileRule(denops: Denops, project: Project): Promise<boolean> {
+  const getNextFilePath = (currentPath: string, paths: string[]): string | undefined => {
+    const currentIndex = paths.findIndex(path => currentPath.includes(path) || path.includes(currentPath));
+    const nextFilePathIndex = (currentIndex + 1) % paths.length;
+    return paths[nextFilePathIndex];
+  };
+
   const currentPath = ensure(await getCurrentFileRealPath(denops), is.String);
-  const currentIndex = condition.path.findIndex(path => currentPath.includes(path) || path.includes(currentPath));
-  const nextFilePathIndex = (currentIndex + 1) % condition.path.length;
-  const filePathToOpen = condition.path[nextFilePathIndex];
+  const filePathToOpen = getNextFilePath(currentPath, project.path);
 
   if (filePathToOpen === undefined) {
     return false;
   }
 
-  await denops.cmd(`:e ${filePathToOpen}`);
-  return true;
+  if (project.rule === "file") {
+    await denops.cmd(`:e ${filePathToOpen}`);
+    return true;
+  }
+
+  if (project.rule === "git") {
+    const result = ensure(await denops.call("system", "git ls-files"), is.String);
+    const files = result.split("\n");
+    const targetFile = files.find((file) => file.includes(filePathToOpen));
+    const realPath = Deno.realPathSync(ensure(targetFile, is.String));
+
+    await denops.cmd(`:e ${realPath}`);
+    return true;
+  }
+
+  return false;
 }
 
 export async function getSwitcherRule(
   denops: Denops,
   rule: string,
   name?: string
-): Promise<Condition | undefined> {
+): Promise<Project | undefined> {
   const switchers = await getSwitchers(denops);
   const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
   const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
-  const replacedConditions = switchers.conditions.map((condition: Condition) => {
-    // 無名関数にして処理をまとめる
-    const realPath = (path: string) => {
-      let updatedPath = path;
-      if (updatedPath.includes("%")) {
-        updatedPath = updatedPath.replace("%", getCommonPart(fileName, condition));
-      }
-      return updatedPath.replace("~", homeDirectroy);
-    };
+  const replacedConditions = switchers.projects.flatMap((project) => 
+    project.rules.map((rule) => {
+      // 無名関数にして処理をまとめる
+      const realPath = (path: string) => {
+        let updatedPath = path;
+        if (updatedPath.includes("%")) {
+          updatedPath = updatedPath.replace("%", getCommonPart(fileName, { ...rule, name: project.name }));
+        }
+        return updatedPath.replace("~", homeDirectroy);
+      };
 
-    return {
-      name: condition.name,
-      path: condition.path.map(realPath),
-      rule: condition.rule,
-    };
-  }, fileName);
+      return {
+        name: project.name,
+        path: rule.path.map(realPath),
+        rule: rule.rule,
+      };
+    })
+  );
 
   const currentFileName: string = await getCurrentFileName(denops);
-  const condition: Condition | undefined = findCondition(replacedConditions, currentFileName, rule, name);
+  const condition: Project | undefined = findProject(replacedConditions, currentFileName, rule, name);
 
   return condition ?? undefined;
 }
@@ -185,12 +217,22 @@ export type SwitchRule = {
   }[];
 };
 
-export type Condition = {
+export type Project = {
   name?: string;
   path: string[];
   rule: string;
   postfix?: string;
   prefix?: string;
+};
+
+export type NewSwitchRule = {
+  projects: {
+    name: string;
+    rules: {
+      rule: string;
+      path: string[];
+    }[];
+  }[];
 };
 
 /**

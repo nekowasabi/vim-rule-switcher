@@ -2,7 +2,7 @@ import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
-import type { Condition } from "./common.ts";
+import type { Project } from "./common.ts";
 import {
   addRule,
   getSwitcherRule,
@@ -19,7 +19,7 @@ export async function main(denops: Denops): Promise<void> {
      * @returns {Promise<void>} Promise that resolves when selection is complete
      */
     async selectSwitchRule(name?: unknown): Promise<void> {
-      const switcher: Condition | undefined = await getSwitcherRule(
+      const switcher: Project | undefined = await getSwitcherRule(
         denops,
         ensure("file", is.String),
         ensure(name ?? "", is.String),
@@ -82,16 +82,16 @@ export async function main(denops: Denops): Promise<void> {
     /**
      * Execute switch based on the specified rule name
      *
-     * @param {unknown} rule - Rule name to use for switching
      * @returns {Promise<boolean>} Promise that returns true if switch succeeds, false if it fails
      */
-    async switchByRule(rule: unknown): Promise<boolean> {
+    async switchByRule(rule: unknown, project: unknown): Promise<boolean> {
       try {
-        // Get the switch rule for the current file using the specified rule name
-        const switcher: Condition | undefined = await getSwitcherRule(
+        const ruleName = rule ? ensure(rule, is.String) : "file";
+        const projectName = project ? ensure(project, is.String) : "";
+        const switcher: Project | undefined = await getSwitcherRule(
           denops,
-          ensure("file", is.String),
-          ensure(rule, is.String),
+          ruleName,
+          projectName,
         );
 
         if (!switcher) {
@@ -123,7 +123,7 @@ export async function main(denops: Denops): Promise<void> {
   };
 
   await denops.cmd(
-    `command! -nargs=? SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [<q-args>])`,
+    `command! -nargs=* SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [<q-args>])`,
   );
 
   await denops.cmd(
