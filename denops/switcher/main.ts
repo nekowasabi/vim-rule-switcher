@@ -123,7 +123,7 @@ export async function main(denops: Denops): Promise<void> {
   };
 
   await denops.cmd(
-    `command! -nargs=* SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [<q-args>])`,
+    `command! -nargs=* SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [<f-args>])`,
   );
 
   await denops.cmd(
