@@ -60,7 +60,7 @@ Make json file in `/path/to/example.json`.
 Define your switching rules in your `.vimrc` or `init.vim` like so:
 
 ```vim
-let g:switch_rule = readfile("/path/to/example.json")
+let g:switch_rule = "/path/to/example.json"
 ```
 
 ## Usage
