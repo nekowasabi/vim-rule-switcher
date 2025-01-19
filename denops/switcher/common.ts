@@ -9,15 +9,6 @@ import {
 } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
 /**
- * プロジェクトの設定を表す型
- *
- * @property {string} [name] - プロジェクトの名前（オプション）
- * @property {string[]} path - ファイルパスの配列
- * @property {string} rule - 適用するルール（'file' または 'git'）
- * @property {string} [postfix] - ファイル名の後置文字列（オプション）
- * @property {string} [prefix] - ファイル名の前置文字列（オプション）
- */
-/**
  * スイッチルールの種類を表す型
  */
 export type RuleType = "file" | "git";
@@ -142,7 +133,14 @@ export function getCommonPart(fileName: string, project: Project): string {
   if (project.prefix && updatedFileName.startsWith(project.prefix)) {
     updatedFileName = updatedFileName.replace(project.prefix, "");
   }
-  return updatedFileName;
+  let baseName = fileName;
+  if (project.postfix && baseName.endsWith(project.postfix)) {
+    baseName = baseName.replace(project.postfix, "");
+  }
+  if (project.prefix && baseName.startsWith(project.prefix)) {
+    baseName = baseName.replace(project.prefix, "");
+  }
+  return baseName;
 }
 
 /**
@@ -265,7 +263,7 @@ export async function switchByFileRule(
   };
 
   const handler = handlers[project.rule];
-  return handler ? handler() : false;
+  return handler ? await handler() : false;
 }
 
 export async function getSwitcherRule(
@@ -441,45 +439,6 @@ export async function openFloatingWindow(
   await n.nvim_buf_set_lines(denops, bufnr, 0, 0, true, pathWithIndex);
   await setupWindowOptions(denops, bufnr);
   await setupKeyMappings(denops, bufnr);
-}
-
-/**
- * Displays available switch rules in a floating window for selection
- *
- * @param {unknown} name - Optional name to filter rules
- * @returns {Promise<void>} Promise that resolves when selection is complete
- */
-/**
- * Execute switch based on the specified rule name
- *
- * @param {unknown} rule - The rule to use for switching
- * @param {unknown} project - The project name to filter rules
- * @returns {Promise<boolean>} Promise that returns true if switch succeeds, false if it fails
- */
-async function switchByRule(
-  denops: Denops,
-  rule: unknown,
-  project: unknown,
-): Promise<boolean> {
-  try {
-    const normalizedRule = ensure(rule ?? "file", is.String) as RuleType;
-    const normalizedProject = project ? ensure(project, is.String) : "";
-
-    const switcher = await getSwitcherRule(
-      denops,
-      normalizedRule,
-      normalizedProject,
-    );
-
-    if (!switcher) {
-      console.log("No switch rule found.");
-      return false;
-    }
-
-    return await switchByFileRule(denops, switcher);
-  } catch (_e) {
-    return false;
-  }
 }
 
 export async function selectSwitchRule(
