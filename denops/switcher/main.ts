@@ -126,19 +126,51 @@ export async function main(denops: Denops): Promise<void> {
     },
   };
 
-  await denops.cmd(
-    `command! -nargs=* SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [<f-args>])`,
-  );
+  // 共通のコマンド定義関数を追加
+  async function defineCommand({
+    denops,
+    command,
+    method,
+    args = "",
+    complete = "",
+  }: {
+    denops: Denops;
+    command: string;
+    method: string;
+    args?: string;
+    complete?: string;
+  }): Promise<void> {
+    let cmd = `command! ${args} ${command} call denops#notify("${denops.name}", "${method}", [<f-args>])`;
+    if (complete) {
+      cmd = cmd.replace(args, `${args} -complete=${complete}`);
+    }
+    await denops.cmd(cmd);
+  }
 
-  await denops.cmd(
-    `command! -nargs=0 OpenSwitchRule call denops#notify("${denops.name}", "openSwitchRule", [])`,
-  );
-
-  await denops.cmd(
-    `command! -nargs=1 SaveSwitchRule call denops#notify("${denops.name}", "saveSwitchRule", [<f-args>])`,
-  );
-
-  await denops.cmd(
-    `command! -nargs=? -complete=customlist,GetRulesName SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [<f-args>])`,
-  );
+  // コマンド定義部分を共通化
+  await defineCommand({
+    denops,
+    command: "SwitchFileByRule",
+    method: "switchByRule",
+    args: "-nargs=*",
+  });
+  await defineCommand({
+    denops,
+    command: "OpenSwitchRule",
+    method: "openSwitchRule",
+    args: "-nargs=0",
+  });
+  await defineCommand({
+    denops,
+    command: "SaveSwitchRule",
+    method: "saveSwitchRule",
+    args: "-nargs=1",
+  });
+  await defineCommand({
+    denops,
+    command: "SelectSwitchRule",
+    method: "selectSwitchRule",
+    args: "-nargs=?",
+    complete: "customlist,GetRulesName",
+  });
 }
