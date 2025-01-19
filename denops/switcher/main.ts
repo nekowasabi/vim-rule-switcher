@@ -2,13 +2,9 @@ import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
+import { addRule, getSwitcherRule, switchByFileRule } from "./common.ts";
 import type { Project } from "./type.ts";
-import {
-  addRule,
-  getSwitcherRule,
-  openFloatingWindow,
-  switchByFileRule,
-} from "./common.ts";
+import { openFloatingWindow } from "./ui.ts";
 
 const NO_RULE_MESSAGE = "No switch rule found.";
 
