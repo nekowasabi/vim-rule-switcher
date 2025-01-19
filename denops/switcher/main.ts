@@ -10,6 +10,8 @@ import {
   switchByFileRule,
 } from "./common.ts";
 
+const NO_RULE_MESSAGE = "No switch rule found.";
+
 export async function main(denops: Denops): Promise<void> {
   denops.dispatcher = {
     /**
@@ -26,7 +28,7 @@ export async function main(denops: Denops): Promise<void> {
       );
 
       if (!switcher) {
-        console.log("No switch rule found.");
+        console.log(NO_RULE_MESSAGE);
         return;
       }
 
@@ -52,21 +54,27 @@ export async function main(denops: Denops): Promise<void> {
      * @param {number} index - The buffer number.
      **/
     async openSelectedFile(index: unknown): Promise<void> {
+      const validIndex = ensure(index, is.Number);
       const bufnr = ensure(await n.nvim_get_current_buf(denops), is.Number);
       const lines = ensure(
         await n.nvim_buf_get_lines(denops, bufnr, 0, -1, false),
         is.ArrayOf(is.String),
       );
-      for (const line of lines) {
-        if (!line.includes(`[${index}]`)) {
-          continue;
-        }
-        const splitted = line.split(" ");
-        const filePath = splitted[splitted.length - 1];
-        await denops.cmd("fclose!");
-        await denops.cmd(`e ${filePath}`);
+
+      const selectedLine = lines.find((line) =>
+        line.startsWith(`[${validIndex}]`),
+      );
+      if (!selectedLine) {
         return;
       }
+
+      const filePath = selectedLine.split("path: ").at(-1);
+      if (!filePath) {
+        return;
+      }
+
+      await denops.cmd("fclose!");
+      await denops.cmd(`e ${filePath}`);
     },
 
     /**
@@ -86,22 +94,22 @@ export async function main(denops: Denops): Promise<void> {
      */
     async switchByRule(rule: unknown, project: unknown): Promise<boolean> {
       try {
-        const ruleName = rule ? ensure(rule, is.String) : "file";
-        const projectName = project ? ensure(project, is.String) : "";
-        const switcher: Project | undefined = await getSwitcherRule(
-          denops,
-          ruleName,
-          projectName,
-        );
+        const ruleName = ensure(rule ?? "file", is.String);
+        const projectName = ensure(project ?? "", is.String);
+
+        const switcher = await getSwitcherRule(denops, ruleName, projectName);
 
         if (!switcher) {
-          console.log("No switch rule found.");
+          console.log(NO_RULE_MESSAGE);
           return false;
         }
 
         await switchByFileRule(denops, switcher);
         return true;
-      } catch (_e) {
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error(`Switch rule error: ${error.message}`);
+        }
         return false;
       }
     },
@@ -113,7 +121,7 @@ export async function main(denops: Denops): Promise<void> {
      */
     async openSwitchRule(): Promise<void> {
       if (!v.g.get(denops, "switch_rule")) {
-        console.log("No switch rule found.");
+        console.log(NO_RULE_MESSAGE);
         return;
       }
 
