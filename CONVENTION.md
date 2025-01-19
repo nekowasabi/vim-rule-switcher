@@ -1,5 +1,10 @@
 # 言語とプログラミングのルール
 
+## 使用環境
+- deno 2.1.4 (stable, release, x86_64-unknown-linux-gnu)
+- v8 13.0.245.12-rusty
+- typescript 5.6.2
+
 ## 言語のルール
 
 - 常に出力メッセージは英語で表示すること。
