@@ -7,6 +7,15 @@ import {
   maybe,
 } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 
+/**
+ * calculateWindowDimensions関数は、フローティングウィンドウの寸法を計算します。
+ *
+ * @param terminalWidth ターミナルの幅
+ * @param terminalHeight ターミナルの高さ
+ * @param contentHeight コンテンツの高さ
+ * @param windowWidth ウィンドウの幅
+ * @returns 計算されたウィンドウの寸法
+ */
 function calculateWindowDimensions(
   terminalWidth: number,
   terminalHeight: number,
@@ -21,6 +30,13 @@ function calculateWindowDimensions(
   };
 }
 
+/**
+ * setupWindowOptions関数は、ウィンドウのオプションを設定します。
+ *
+ * @param denops Denopsのインスタンス
+ * @param bufnr バッファ番号
+ * @returns Promise
+ */
 async function setupWindowOptions(denops: Denops, bufnr: number) {
   await denops.cmd("normal! gg");
   await denops.cmd("set nonumber");
@@ -29,6 +45,13 @@ async function setupWindowOptions(denops: Denops, bufnr: number) {
   await n.nvim_buf_set_option(denops, bufnr, "buftype", "nofile");
 }
 
+/**
+ * setupKeyMappings関数は、キーマッピングを設定します。
+ *
+ * @param denops Denopsのインスタンス
+ * @param bufnr バッファ番号
+ * @returns Promise
+ */
 async function setupKeyMappings(denops: Denops, bufnr: number) {
   // 数字キーのマッピング
   for (let i = 0; i <= 9; i++) {
@@ -58,6 +81,14 @@ async function setupKeyMappings(denops: Denops, bufnr: number) {
   });
 }
 
+/**
+ * openFloatingWindow関数は、フローティングウィンドウを開きます。
+ *
+ * @param denops Denopsのインスタンス
+ * @param bufnr バッファ番号
+ * @param pathWithIndex 表示するパスの配列（インデックス付き）
+ * @returns Promise
+ */
 export async function openFloatingWindow(
   denops: Denops,
   bufnr: number,
