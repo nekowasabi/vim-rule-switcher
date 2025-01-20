@@ -1,3 +1,5 @@
+import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
+
 /**
  * スイッチルールの種類を表す型
  */
@@ -6,40 +8,29 @@ export type RuleType = "file" | "git";
 /**
  * プロジェクトの基本設定を表す型
  */
-export type ProjectBase = {
+export interface Project {
   name?: string;
-  postfix?: string;
-  prefix?: string;
-};
-
-/**
- * パスの設定を表す型
- */
-export type PathConfig = {
-  path: string[];
-};
-
-/**
- * プロジェクトの設定を表す型
- */
-export type Project = ProjectBase &
-  PathConfig & {
-    rule: RuleType;
-  };
-
-/**
- * ルールの設定を表す型
- */
-export type Rule = {
   rule: RuleType;
-} & PathConfig;
+  path: string[];
+}
 
 /**
  * スイッチルールの設定を表す型
  */
-export type SwitchRule = {
-  projects: Array<{
+export interface SwitchRule {
+  projects: {
     name: string;
-    rules: Array<Rule>;
-  }>;
-}; 
+    rules: Project[];
+  }[];
+}
+
+/**
+ * コマンド定義を表す型
+ */
+export interface CommandDefinition {
+  denops: Denops;
+  command: string;
+  method: string;
+  args?: string;
+  complete?: string;
+}
