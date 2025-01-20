@@ -306,6 +306,13 @@ export async function addRule(
   console.log(`Rule ${projectName} added successfully.`);
 }
 
+/**
+ * スイッチルールの選択肢をフローティングウィンドウで表示します。
+ *
+ * @param {Denops} denops - Denops のインスタンス
+ * @param {unknown} [name] - フィルタリングするルールの名前 (オプション)
+ * @returns {Promise<void>}
+ */
 export async function selectSwitchRule(
   denops: Denops,
   name?: unknown,
