@@ -13,16 +13,29 @@ import {
 } from "./util.ts";
 
 /**
- * Handles git file operations
- * @param denops Denops instance
- * @param filePathToOpen Path to the file to open
- * @returns Promise<boolean> Success status
+ * カスタムエラークラス
+ */
+export class SwitcherError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SwitcherError";
+  }
+}
+
+/**
+ * Gitファイル操作を処理する
+ * @param denops Denopsインスタンス
+ * @param filePathToOpen 開くファイルのパス
+ * @throws {SwitcherError} 一致するファイルが見つからない場合
+ * @returns Promise<boolean> 成功状態
  */
 async function handleGitFile(
   denops: Denops,
   filePathToOpen: string | undefined,
 ): Promise<boolean> {
-  if (!filePathToOpen) return false;
+  if (!filePathToOpen) {
+    throw new SwitcherError("File path is undefined");
+  }
 
   const result = ensure(await denops.call("system", "git ls-files"), is.String);
   const targetFile = result
@@ -30,26 +43,21 @@ async function handleGitFile(
     .find((file) => file.includes(filePathToOpen));
 
   if (!targetFile) {
-    console.log("No switch rule found.");
-    return false;
+    throw new SwitcherError("No matching file found in git repository");
   }
 
   const realPath = Deno.realPathSync(ensure(targetFile, is.String));
   return openFile(denops, realPath);
 }
 
-export async function getCurrentFileRealPath(denops: Denops): Promise<string> {
-  return Deno.realPathSync(await getCurrentFilePath(denops));
-}
-
 /**
  * 現在のファイルパスを含む条件を見つける
  *
- * @param {Project[]} replacedProjects - The conditions to search in.
- * @param {string} currentFile - The current file path|file name to find.
- * @param {string} rule - The rule name to filter conditions.
- * @param {string} [name] - Optional name to further filter conditions.
- * @returns {Project | undefined} - The found condition or undefined if not found.
+ * @param replacedProjects - 検索対象の条件
+ * @param currentFile - 現在のファイルパス|ファイル名
+ * @param rule - フィルタリングするルール名
+ * @param name - さらにフィルタリングするための名前（オプション）
+ * @returns 見つかった条件、または見つからない場合はundefined
  */
 export function findProject(
   replacedProjects: Project[],
@@ -71,16 +79,15 @@ export function findProject(
 }
 
 /**
- * `getSwitchers`関数は、設定されたスイッチルールを取得します。
+ * スイッチルールの設定を取得する
  *
- * @param {Denops} denops - Denopsオブジェクト
- * @returns {Promise<unknown>} スイッチルールの設定を含むPromiseを返します。
- * @throws {Error} スイッチルールの設定が期待する形式でない場合、エラーをスローします。
+ * @param denops - Denopsインスタンス
+ * @returns スイッチルールの設定を含むPromise
+ * @throws {SwitcherError} スイッチルールが見つからない場合
  */
 export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
   if (!v.g.get(denops, "switch_rule")) {
-    console.log("No switch rule found.");
-    Deno.exit(1);
+    throw new SwitcherError("No switch rule found");
   }
 
   const path = ensure(await v.g.get(denops, "switch_rule"), is.String);
@@ -89,8 +96,7 @@ export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
   ensure(fileContent, is.Array);
 
   if (fileContent.length === 0) {
-    console.log("No switch rule found.");
-    Deno.exit(1);
+    throw new SwitcherError("No switch rule found");
   }
 
   const file = fileContent.join("\n");
@@ -117,8 +123,9 @@ export async function getSwitchers(denops: Denops): Promise<SwitchRule> {
 /**
  * ファイルパスの循環的な切り替えを行うヘルパー関数
  *
- * @param {Project} project - スイッチングの条件を定義するオブジェクト。
- * @returns {Promise<boolean>} スイッチングが完了したら解決されるPromise。
+ * @param currentPath - 現在のファイルパス
+ * @param paths - 切り替え可能なパスの配列
+ * @returns 次のファイルパス、または見つからない場合はundefined
  */
 const getNextFilePath = (
   currentPath: string,
@@ -133,6 +140,9 @@ const getNextFilePath = (
 
 /**
  * ルールに基づいてファイル切り替えを行う
+ * @param denops - Denopsインスタンス
+ * @param project - プロジェクト設定
+ * @throws {SwitcherError} ファイル切り替えに失敗した場合
  */
 export async function switchByFileRule(
   denops: Denops,
@@ -145,6 +155,9 @@ export async function switchByFileRule(
         is.String,
       );
       const filePathToOpen = getNextFilePath(currentPath, project.path);
+      if (!filePathToOpen) {
+        throw new SwitcherError("No next file path found");
+      }
       return openFile(denops, filePathToOpen);
     },
     git: async () => {
@@ -158,20 +171,30 @@ export async function switchByFileRule(
   };
 
   const handler = handlers[project.rule];
-  return handler ? await handler() : false;
+  if (!handler) {
+    throw new SwitcherError(`Unknown rule type: ${project.rule}`);
+  }
+  return handler();
 }
 
+/**
+ * スイッチャールールを取得し、現在のファイルに適用可能なルールを返す
+ * @param denops - Denopsインスタンス
+ * @param rule - ルールタイプ
+ * @param name - オプショナルなプロジェクト名
+ * @throws {SwitcherError} ルールが見つからない場合
+ */
 export async function getSwitcherRule(
   denops: Denops,
   rule: string,
   name?: string,
-): Promise<Project | undefined> {
+): Promise<Project> {
   const switchers = await getSwitchers(denops);
   const fileName = ensure(await fn.expand(denops, "%:t:r"), is.String);
-  const homeDirectroy = ensure(Deno.env.get("HOME"), is.String);
+  const homeDirectory = ensure(Deno.env.get("HOME"), is.String);
+
   const replacedConditions = switchers.projects.flatMap((project) =>
     project.rules.map((rule) => {
-      // 無名関数にして処理をまとめる
       const realPath = (path: string) => {
         let updatedPath = path;
         if (updatedPath.includes("%")) {
@@ -180,7 +203,7 @@ export async function getSwitcherRule(
             getCommonPart(fileName, { ...rule, name: project.name }),
           );
         }
-        return updatedPath.replace("~", homeDirectroy);
+        return updatedPath.replace("~", homeDirectory);
       };
 
       return {
@@ -191,23 +214,28 @@ export async function getSwitcherRule(
     }),
   );
 
-  const currentFileName: string = await getCurrentFileName(denops);
-  const condition: Project | undefined = findProject(
+  const currentFileName = await getCurrentFileName(denops);
+  const condition = findProject(
     replacedConditions,
     currentFileName,
     rule,
     name,
   );
 
-  return condition ?? undefined;
+  if (!condition) {
+    throw new SwitcherError("No matching switch rule found");
+  }
+
+  return condition;
 }
 
 /**
- * Add a new rule to the existing switch rules
+ * 新しいルールを既存のスイッチルールに追加する
  *
- * @param {Denops} denops - Denops instance
- * @param {string} projectName - Name of the new rule
- * @returns {Promise<void>}
+ * @param denops - Denopsインスタンス
+ * @param projectName - 新しいルールの名前
+ * @throws {SwitcherError} ルールを追加できない場合
+ * @returns Promise<void>
  */
 export async function addRule(
   denops: Denops,
@@ -254,11 +282,11 @@ export async function addRule(
 }
 
 /**
- * スイッチルールの選択肢をフローティングウィンドウで表示します。
+ * スイッチルールの選択肢をフローティングウィンドウで表示する
  *
- * @param {Denops} denops - Denops のインスタンス
- * @param {unknown} [name] - フィルタリングするルールの名前 (オプション)
- * @returns {Promise<void>}
+ * @param denops - Denopsインスタンス
+ * @param name - フィルタリングするルールの名前（オプション）
+ * @throws {SwitcherError} ルールが見つからない場合
  */
 export async function selectSwitchRule(
   denops: Denops,
@@ -271,8 +299,7 @@ export async function selectSwitchRule(
   );
 
   if (!switcher) {
-    console.log("No switch rule found.");
-    return;
+    throw new SwitcherError("No switch rule found");
   }
 
   const formatPath = (path: string, index: number): string =>
@@ -282,4 +309,14 @@ export async function selectSwitchRule(
   const bufnr = ensure(await n.nvim_create_buf(denops, false, true), is.Number);
 
   await openFloatingWindow(denops, bufnr, paths.map(formatPath));
+}
+
+/**
+ * 現在のファイルの実際のパスを取得する
+ *
+ * @param denops - Denopsインスタンス
+ * @returns 現在のファイルの実際のパス
+ */
+export async function getCurrentFileRealPath(denops: Denops): Promise<string> {
+  return Deno.realPathSync(await getCurrentFilePath(denops));
 }
