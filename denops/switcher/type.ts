@@ -12,6 +12,8 @@ export interface Project {
   name?: string;
   rule: RuleType;
   path: string[];
+  prefix?: string;
+  postfix?: string;
 }
 
 /**

@@ -1,5 +1,5 @@
-import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import type { Project } from "./type.ts";
 
@@ -60,4 +60,4 @@ export function getCommonPart(fileName: string, project: Project): string {
     baseName = baseName.replace(project.prefix, "");
   }
   return baseName;
-} 
+}
