@@ -110,11 +110,11 @@ If the currently open file is main.ts and
 
 ```json
 {
-  “rule”: “git”,
-  “postfix”: “Test”,
-  “path”: [
-    “%.ts”,
-    “%Test.ts”
+  "rule": "git",
+  "postfix": "Test",
+  "path": [
+    "%.ts",
+    "%Test.ts"
   ]
 }
 ```
@@ -143,14 +143,12 @@ Available keybindings in the selection window:
 To add a new rule for the current file, use the following command:
 
 ![wezterm-gui_sQKRX4b5bx](https://github.com/user-attachments/assets/29f4ffe4-6d20-4ed4-aae6-2d0c6386c0ff)
-
-
 ```vim
 :SaveSwitchRule <rule_name>
 ```
 
 This command will add the current file to the specified rule in the switch rule
-file.
+json file.
 
 To edit the rules file, use the following command:
 
@@ -158,7 +156,7 @@ To edit the rules file, use the following command:
 :OpenSwitchRuleFile
 ```
 
-To select a switch rule interactively, use the following command:
+To edit switch rule directly, use the following command:
 
 
 ## Related Projects
