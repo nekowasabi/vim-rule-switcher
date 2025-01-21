@@ -2,6 +2,8 @@ import * as fn from "https://deno.land/x/denops_std@v6.4.0/function/mod.ts";
 import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import type { Project } from "./type.ts";
+import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
+import { openFloatingWindow } from "./ui.ts";
 
 /**
  * Opens a file in the editor
@@ -38,7 +40,8 @@ export async function getCurrentFilePath(denops: Denops): Promise<string> {
 }
 
 /**
- * ファイル名から共通部分を取得する
+ * ファイル名からプレフィックスとポストフィックスを取り除いた共通部分を取得する
+ * sample: getCommonPart("foo_bar_baz", { prefix: "foo_", postfix: "_baz" }) => "bar"
  *
  * @param {string} fileName ファイル名
  * @param {Project} project 条件
@@ -60,4 +63,41 @@ export function getCommonPart(fileName: string, project: Project): string {
     baseName = baseName.replace(project.prefix, "");
   }
   return baseName;
+}
+
+/**
+ * ファイルパスから表示用のラベルを生成する
+ *
+ * @param {string} path - ファイルパス
+ * @param {number} index - ファイルのインデックス
+ * @returns {string} 表示用のラベル
+ */
+export function createPathLabel(path: string, index: number): string {
+  const fileName = path.split("/").pop() ?? path;
+  return `[${index}]: \`${fileName}\` path: ${path}`;
+}
+
+/**
+ * フローティングウィンドウを作成し、パスリストを表示する
+ *
+ * @param {Denops} denops - Denopsオブジェクト
+ * @param {string[]} paths - ファイルパスのリスト
+ */
+export async function createFloatingWindowWithPaths(
+  denops: Denops,
+  paths: string[],
+): Promise<void> {
+  const pathLabels = paths.map((p, i) => createPathLabel(p, i));
+  const bufnr = ensure(await n.nvim_create_buf(denops, false, true), is.Number);
+  await openFloatingWindow(denops, bufnr, pathLabels);
+}
+
+/**
+ * 選択されたパスを解析して取得する
+ *
+ * @param {string} line - 選択されたパスを含む行
+ * @returns {string | undefined} 選択されたパス
+ */
+export function parseSelectedPath(line: string): string | undefined {
+  return line.split("path: ").at(-1);
 }

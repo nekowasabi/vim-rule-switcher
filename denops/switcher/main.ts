@@ -4,7 +4,7 @@ import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
 import { addRule, getSwitcherRule, switchByFileRule } from "./switcher.ts";
 import type { CommandDefinition } from "./type.ts";
-import { openFloatingWindow } from "./ui.ts";
+import { createFloatingWindowWithPaths, parseSelectedPath } from "./util.ts";
 
 const NO_RULE_MESSAGE = "No switch rule found.";
 
@@ -15,43 +15,6 @@ type Dispatcher = {
   switchByRule(rule: unknown, project: unknown): Promise<boolean>;
   openSwitchRule(): Promise<void>;
 };
-
-/**
- * ファイルパスから表示用のラベルを生成する
- *
- * @param {string} path - ファイルパス
- * @param {number} index - ファイルのインデックス
- * @returns {string} 表示用のラベル
- */
-function createPathLabel(path: string, index: number): string {
-  const fileName = path.split("/").pop() ?? path;
-  return `[${index}]: \`${fileName}\` path: ${path}`;
-}
-
-/**
- * フローティングウィンドウを作成し、パスリストを表示する
- *
- * @param {Denops} denops - Denopsオブジェクト
- * @param {string[]} paths - ファイルパスのリスト
- */
-async function createFloatingWindowWithPaths(
-  denops: Denops,
-  paths: string[],
-): Promise<void> {
-  const pathLabels = paths.map((p, i) => createPathLabel(p, i));
-  const bufnr = ensure(await n.nvim_create_buf(denops, false, true), is.Number);
-  await openFloatingWindow(denops, bufnr, pathLabels);
-}
-
-/**
- * 選択されたパスを解析して取得する
- *
- * @param {string} line - 選択されたパスを含む行
- * @returns {string | undefined} 選択されたパス
- */
-function parseSelectedPath(line: string): string | undefined {
-  return line.split("path: ").at(-1);
-}
 
 /**
  * Vimコマンドを定義する
