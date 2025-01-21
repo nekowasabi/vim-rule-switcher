@@ -2,139 +2,185 @@ import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import * as v from "https://deno.land/x/denops_std@v6.4.0/variable/mod.ts";
 import * as n from "https://deno.land/x/denops_std@v6.5.1/function/nvim/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.0/mod.ts";
-import type { Condition } from "./common.ts";
-import {
-  addRule,
-  getSwitcherRule,
-  openFloatingWindow,
-  switchByFileRule,
-} from "./common.ts";
+import { addRule, getSwitcherRule, switchByFileRule } from "./switcher.ts";
+import type { CommandDefinition } from "./type.ts";
+import { createFloatingWindowWithPaths, parseSelectedPath } from "./util.ts";
+
+const NO_RULE_MESSAGE = "No switch rule found.";
+
+type Dispatcher = {
+  selectSwitchRule(name?: unknown): Promise<void>;
+  openSelectedFile(index: unknown): Promise<void>;
+  saveSwitchRule(name: unknown): Promise<void>;
+  switchByRule(rule: unknown, project: unknown): Promise<boolean>;
+  openSwitchRule(): Promise<void>;
+};
+
+/**
+ * Vimコマンドを定義する
+ */
+async function defineCommand({
+  denops,
+  command,
+  method,
+  args = "",
+  complete = "",
+}: CommandDefinition): Promise<void> {
+  let cmd = `command! ${args} ${command} call denops#notify("${denops.name}", "${method}", [<f-args>])`;
+  if (complete) {
+    cmd = cmd.replace(args, `${args} -complete=${complete}`);
+  }
+  await denops.cmd(cmd);
+}
 
 export async function main(denops: Denops): Promise<void> {
-  denops.dispatcher = {
+  const dispatcher: Dispatcher = {
     /**
-     * Displays available switch rules in a floating window for selection
-     *
-     * @param {unknown} name - Optional name to filter rules
-     * @returns {Promise<void>} Promise that resolves when selection is complete
-     */
-    async selectSwitchRule(name?: unknown): Promise<void> {
-      const switcher: Condition | undefined = await getSwitcherRule(
-        denops,
-        ensure("file", is.String),
-        ensure(name ?? "", is.String),
-      );
-
-      if (!switcher) {
-        console.log("No switch rule found.");
-        return;
-      }
-
-      const path = ensure(switcher.path, is.ArrayOf(is.String));
-      const pathWithIndex = path.map((p, i) => {
-        // フルパスからファイル名だけ取得
-        const fileName = p.split("/").pop();
-        return `[${i}]: \`${fileName}\` path: ${p}`;
-      });
-
-      const bufnr = ensure(
-        await n.nvim_create_buf(denops, false, true),
-        is.Number,
-      );
-      await openFloatingWindow(denops, bufnr, pathWithIndex);
-    },
-
-    /**
-     * Opens a floating window for the specified buffer.
-     * The floating window
-        is positioned at the center of the terminal.
-     *
-     * @param {number} index - The buffer number.
+     * floating windowで選択肢を表示する
+     * @param name - フィルタリングするルールの名前（オプション）
+     * @throws {SwitcherError} ルールが見つからない場合
      **/
-    async openSelectedFile(index: unknown): Promise<void> {
-      const bufnr = ensure(await n.nvim_get_current_buf(denops), is.Number);
-      const lines = ensure(
-        await n.nvim_buf_get_lines(denops, bufnr, 0, -1, false),
-        is.ArrayOf(is.String),
-      );
-      for (const line of lines) {
-        if (!line.includes(`[${index}]`)) {
-          continue;
-        }
-        const splitted = line.split(" ");
-        const filePath = splitted[splitted.length - 1];
-        await denops.cmd("fclose!");
-        await denops.cmd(`e ${filePath}`);
-        return;
-      }
-    },
-
-    /**
-     * Save the switch rule
-     *
-     * @param {unknown} name - Name of the rule to save
-     * @returns {Promise<void>} Promise that resolves when the process is complete
-     */
-    async saveSwitchRule(name: unknown): Promise<void> {
-      await addRule(denops, ensure(name, is.String));
-    },
-
-    /**
-     * Execute switch based on the specified rule name
-     *
-     * @param {unknown} rule - Rule name to use for switching
-     * @returns {Promise<boolean>} Promise that returns true if switch succeeds, false if it fails
-     */
-    async switchByRule(rule: unknown): Promise<boolean> {
+    async selectSwitchRule(name?: unknown): Promise<void> {
       try {
-        // Get the switch rule for the current file using the specified rule name
-        const switcher: Condition | undefined = await getSwitcherRule(
+        const switcher = await getSwitcherRule(
           denops,
           ensure("file", is.String),
-          ensure(rule, is.String),
+          ensure(name ?? "", is.String),
         );
 
         if (!switcher) {
-          console.log("No switch rule found.");
+          console.log(NO_RULE_MESSAGE);
+          return;
+        }
+
+        const path = ensure(switcher.path, is.ArrayOf(is.String));
+        await createFloatingWindowWithPaths(denops, path);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Error in openSelectedFile: ${e.message}`);
+      }
+    },
+
+    /**
+     * 選択されたファイルを開く
+     * @param index - 選択されたファイルのインデックス
+     * @throws {SwitcherError} ファイルが見つからない場合
+     **/
+    async openSelectedFile(index: unknown): Promise<void> {
+      try {
+        const validIndex = ensure(index, is.Number);
+        const bufnr = ensure(await n.nvim_get_current_buf(denops), is.Number);
+        const lines = ensure(
+          await n.nvim_buf_get_lines(denops, bufnr, 0, -1, false),
+          is.ArrayOf(is.String),
+        );
+
+        const selectedLine = lines.find((line) =>
+          line.startsWith(`[${validIndex}]`),
+        );
+        if (!selectedLine) return;
+
+        const filePath = parseSelectedPath(selectedLine);
+        if (!filePath) return;
+
+        await denops.cmd("fclose!");
+        await denops.cmd(`e ${filePath}`);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Error in openSelectedFile: ${e.message}`);
+      }
+    },
+
+    /**
+     * スイッチルールを保存する
+     * @param name - 保存するルールの名前
+     **/
+    async saveSwitchRule(name: unknown): Promise<void> {
+      try {
+        await addRule(denops, ensure(name, is.String));
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Error in openSelectedFile: ${e.message}`);
+      }
+    },
+
+    /**
+     * ルールに基づいてファイルを切り替える
+     * @param rule - ルール名
+     * @param project - プロジェクト名
+     * @returns 切り替えが成功したかどうか
+     **/
+    async switchByRule(rule: unknown, project: unknown): Promise<boolean> {
+      try {
+        const ruleName = ensure(rule ?? "file", is.String);
+        const projectName = ensure(project ?? "", is.String);
+        const switcher = await getSwitcherRule(denops, ruleName, projectName);
+
+        if (!switcher) {
+          console.log(NO_RULE_MESSAGE);
           return false;
         }
 
-        await switchByFileRule(denops, switcher);
-        return true;
-      } catch (_e) {
+        return await switchByFileRule(denops, switcher);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Error in openSelectedFile: ${e.message}`);
         return false;
       }
     },
 
     /**
-     * Open the current switch rule
-     *
-     * @returns {Promise<void>} Promise that resolves when the process is complete
-     */
+     * ファイル切り替え定義ファイルを開く
+     * @throws {SwitcherError} ルールが見つからない場合
+     **/
     async openSwitchRule(): Promise<void> {
-      if (!v.g.get(denops, "switch_rule")) {
-        console.log("No switch rule found.");
-        return;
-      }
+      try {
+        if (!(await v.g.get(denops, "switch_rule"))) {
+          console.log(NO_RULE_MESSAGE);
+          return;
+        }
 
-      const path = ensure(await v.g.get(denops, "switch_rule"), is.String);
-      await denops.cmd(`edit ${path}`);
+        const path = ensure(await v.g.get(denops, "switch_rule"), is.String);
+        await denops.cmd(`edit ${path}`);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Error in openSelectedFile: ${e.message}`);
+      }
     },
   };
 
-  await denops.cmd(
-    `command! -nargs=? SwitchFileByRule call denops#notify("${denops.name}", "switchByRule", [<q-args>])`,
-  );
+  denops.dispatcher = dispatcher;
 
-  await denops.cmd(
-    `command! -nargs=0 OpenSwitchRule call denops#notify("${denops.name}", "openSwitchRule", [])`,
-  );
+  // コマンド定義
+  const commands: CommandDefinition[] = [
+    {
+      denops,
+      command: "SwitchFileByRule",
+      method: "switchByRule",
+      args: "-nargs=*",
+    },
+    {
+      denops,
+      command: "OpenSwitchRule",
+      method: "openSwitchRule",
+      args: "-nargs=0",
+    },
+    {
+      denops,
+      command: "SaveSwitchRule",
+      method: "saveSwitchRule",
+      args: "-nargs=1",
+    },
+    {
+      denops,
+      command: "SelectSwitchRule",
+      method: "selectSwitchRule",
+      args: "-nargs=?",
+      complete: "customlist,GetRulesName",
+    },
+  ];
 
-  await denops.cmd(
-    `command! -nargs=1 SaveSwitchRule call denops#notify("${denops.name}", "saveSwitchRule", [<f-args>])`,
-  );
-
-  await denops.cmd(
-    `command! -nargs=? -complete=customlist,GetRulesName SelectSwitchRule call denops#notify("${denops.name}", "selectSwitchRule", [<f-args>])`,
-  );
+  for (const command of commands) {
+    await defineCommand(command);
+  }
 }
