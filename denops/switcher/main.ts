@@ -18,6 +18,10 @@ type Dispatcher = {
 
 /**
  * ファイルパスから表示用のラベルを生成する
+ *
+ * @param {string} path - ファイルパス
+ * @param {number} index - ファイルのインデックス
+ * @returns {string} 表示用のラベル
  */
 function createPathLabel(path: string, index: number): string {
   const fileName = path.split("/").pop() ?? path;
@@ -26,6 +30,9 @@ function createPathLabel(path: string, index: number): string {
 
 /**
  * フローティングウィンドウを作成し、パスリストを表示する
+ *
+ * @param {Denops} denops - Denopsオブジェクト
+ * @param {string[]} paths - ファイルパスのリスト
  */
 async function createFloatingWindowWithPaths(
   denops: Denops,
@@ -38,6 +45,9 @@ async function createFloatingWindowWithPaths(
 
 /**
  * 選択されたパスを解析して取得する
+ *
+ * @param {string} line - 選択されたパスを含む行
+ * @returns {string | undefined} 選択されたパス
  */
 function parseSelectedPath(line: string): string | undefined {
   return line.split("path: ").at(-1);
