@@ -85,28 +85,28 @@ let g:switch_rule = "/path/to/example.json"
 
 ## Usage
 
-To switch between files according to the defined rules, use the following Vim
-command:
+To switch between files using the defined rules, use the following Vim command:
+
+You can use the command:
 
 ```vim
 :SwitchFileByRule [rule] [name]
-
-ex. :SwitchFileByRule git switcher<CR>
 ```
 
-If no name argument is provided, it switches between files based on all defined rules.
-If a rule or name argument is provided, it will open the first file from the file paths
-associated with that specific rule name.
+Example usage: 
+```
+:SwitchFileByRule git switcher<CR>
+```
 
-Please check the following for instructions on how to use the site.
+If no `name` is given, the command will cycle through files according to all available rules. If either a `rule` or `name` is specified, it opens the first file associated with that specific rule or name.
 
-`rule`
-file: The buffer is switched to the file set as the path in the rule file.
-git: 
-It recognizes % as the current file name and switches the buffer using prefix or postfix.
+Explanation of `rule` types:
 
-Example:
-If the currently open file is main.ts and
+- `file`: Switches to the file defined in the rule's path.
+- `git`: Uses `%` as a placeholder for the current file, allowing switches based on prefix or postfix rules.
+
+Example of a `git` rule:
+Suppose the current file is `main.ts`, and the rule is defined as:
 
 ```json
 {
@@ -119,11 +119,12 @@ If the currently open file is main.ts and
 }
 ```
 
-If you run `SwitchFileByRule git` in this situation,
-the buffer will switch to mainTest.ts, which is managed in the git repository. Because git ls-files is used, there is no need to specify the path.
+This rule will switch between `main.ts` and `mainTest.ts`.
+
+Executing `SwitchFileByRule git` in this context will switch the buffer to `mainTest.ts`, assuming it is tracked in the git repository. Since `git ls-files` is used, specifying the path is unnecessary.
 
 `name`
-Set name.
+Specifies the name.
 
 ```vim
 :SelectSwitchRule
