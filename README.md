@@ -108,6 +108,7 @@ It recognizes % as the current file name and switches the buffer using prefix or
 Example:
 If the currently open file is main.ts and
 
+```json
 {
   “rule”: “git”,
   “postfix”: “Test”,
@@ -116,6 +117,8 @@ If the currently open file is main.ts and
     “%Test.ts”
   ]
 }
+```
+
 If you run `SwitchFileByRule git` in this situation,
 the buffer will switch to mainTest.ts, which is managed in the git repository. Because git ls-files is used, there is no need to specify the path.
 
@@ -138,6 +141,9 @@ Available keybindings in the selection window:
 - o: Open the file under cursor
 
 To add a new rule for the current file, use the following command:
+
+![wezterm-gui_sQKRX4b5bx](https://github.com/user-attachments/assets/29f4ffe4-6d20-4ed4-aae6-2d0c6386c0ff)
+
 
 ```vim
 :SaveSwitchRule <rule_name>
