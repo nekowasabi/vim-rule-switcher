@@ -63,7 +63,7 @@ Make json file in `/path/to/example.json`.
             "~/.config/nvim/plugged/vim-rule-switcher/denops/switcher/switcher.ts"
           ]
         },
-       
+        { 
           "rule": "git",
           "postfix": "Test",
           "path": [
