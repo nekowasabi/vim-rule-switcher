@@ -57,25 +57,6 @@ Make json file in `/path/to/example.json`.
       "name": "switcher",
       "rules": [
         {
-          "rule": "file",
-          "path": [
-            "~/.config/nvim/plugged/vim-rule-switcher/denops/switcher/main.ts",
-            "~/.config/nvim/plugged/vim-rule-switcher/denops/switcher/switcher.ts"
-          ]
-        },
-        { 
-          "rule": "git",
-          "postfix": "Test",
-          "path": [
-            "%.ts",
-            "%Test.ts"
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
 
 Define your switching rules in your `.vimrc` or `init.vim` like so:
 
@@ -140,9 +121,7 @@ Available keybindings in the selection window:
 - q: Quit the selection window  
 - o: Open the file under cursor
 
-To add a new rule for the current file, use the following command:
 
-![wezterm-gui_sQKRX4b5bx](https://github.com/user-attachments/assets/29f4ffe4-6d20-4ed4-aae6-2d0c6386c0ff)
 ```vim
 :SaveSwitchRule <rule_name>
 ```
