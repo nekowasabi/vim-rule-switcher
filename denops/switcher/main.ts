@@ -57,7 +57,7 @@ export async function main(denops: Denops): Promise<void> {
         await createFloatingWindowWithPaths(denops, path);
       } catch (error) {
         const e = error as Error;
-        console.error(`Error in openSelectedFile: ${e.message}`);
+        console.error(`Error in selectSwitchRule: ${e.message}`);
       }
     },
 
@@ -100,7 +100,7 @@ export async function main(denops: Denops): Promise<void> {
         await addRule(denops, ensure(name, is.String));
       } catch (error) {
         const e = error as Error;
-        console.error(`Error in openSelectedFile: ${e.message}`);
+        console.error(`Error in saveSwitchRule: ${e.message}`);
       }
     },
 
@@ -124,7 +124,7 @@ export async function main(denops: Denops): Promise<void> {
         return await switchByFileRule(denops, switcher);
       } catch (error) {
         const e = error as Error;
-        console.error(`Error in openSelectedFile: ${e.message}`);
+        console.error(`Error in switchByRule: ${e.message}`);
         return false;
       }
     },
@@ -144,7 +144,7 @@ export async function main(denops: Denops): Promise<void> {
         await denops.cmd(`edit ${path}`);
       } catch (error) {
         const e = error as Error;
-        console.error(`Error in openSelectedFile: ${e.message}`);
+        console.error(`Error in openSwitchRule: ${e.message}`);
       }
     },
   };

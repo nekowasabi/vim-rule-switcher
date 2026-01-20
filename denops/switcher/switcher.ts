@@ -245,9 +245,38 @@ export async function addRule(
     await v.g.get(denops, "switch_rule"),
     is.String,
   );
-  const switchRules: SwitchRule = JSON.parse(
-    await Deno.readTextFile(switchRulePath),
-  );
+
+  // ファイル存在確認と読み込み
+  let fileContent: string;
+  try {
+    fileContent = await Deno.readTextFile(switchRulePath);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      // ファイルが存在しない場合は初期構造で初期化
+      fileContent = "";
+    } else {
+      throw error;
+    }
+  }
+
+  // 空ファイルまたはJSONパースのハンドリング
+  let switchRules: SwitchRule;
+  if (fileContent.trim() === "") {
+    // 空ファイルの場合は初期構造
+    switchRules = { projects: [] };
+  } else {
+    try {
+      switchRules = JSON.parse(fileContent);
+    } catch (error) {
+      // JSONパース失敗時は初期構造
+      throw new SwitcherError(`Failed to parse switch rule file: ${error}`);
+    }
+  }
+
+  // projects 配列が存在しない場合のフォールバック
+  if (!switchRules.projects || !Array.isArray(switchRules.projects)) {
+    switchRules.projects = [];
+  }
 
   const filePath = await getCurrentFileRealPath(denops);
   const existingCondition = switchRules.projects.find(
